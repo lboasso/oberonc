@@ -15,7 +15,7 @@ by Hanspeter Mössenböck for more details).
 
 The compiler is compact and does not depend on any third party libraries. It
 produces Java bytecode in one pass while parsing the source file. Although
-generating code for a stack machine is straightforward, this task is acerbated
+generating code for a stack machine is straightforward, this task is exacerbated
 by a complex class file format and the fact that the JVM was designed with the
 Java language in mind. In fact the JVM lacks many of the primitives required to
 support Oberon's features:
