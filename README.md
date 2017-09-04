@@ -6,8 +6,7 @@
 programming language. It targets the Java Virtual Machine (version >=1.5).
 
 This project was started to showcase the art of Niklaus Wirth in writing
-compilers (see ["Compiler Construction - The Art of Niklaus
-Wirth"](ftp://debian.ssw.uni-linz.ac.at/pub/Papers/Moe00b.pdf)
+compilers (see ["Compiler Construction - The Art of Niklaus Wirth"](ftp://debian.ssw.uni-linz.ac.at/pub/Papers/Moe00b.pdf)
 by Hanspeter Mössenböck for more details).
 
 `oberonc` is inspired by Niklaus Wirth's compiler for a RISC processor available
@@ -90,7 +89,7 @@ it is used only during compilation and enables `oberonc` to perform separate
 compilation of modules that import Hello. In this simple case Hello.Mod
 does not export anything, but the other modules in the `examples` folder do.
 
-To run Hello.class you need the OberonRuntime.class and Out.class. This are
+To run Hello.class you need the OberonRuntime.class and Out.class. These are
 already present in the `bin` folder so they are already in the class path, we
 just need to include the current folder as well to locate Hello.class:
 
