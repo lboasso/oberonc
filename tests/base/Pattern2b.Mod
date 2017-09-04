@@ -1,0 +1,36 @@
+MODULE Pattern2b;
+IMPORT SYSTEM;
+  VAR i, j: INTEGER;
+      x, y: REAL;
+      s, t: SET;
+BEGIN 
+  x := 1.0+7.0;
+  WriteReal(x);
+  y := 7.0;
+  x := 1.0+y;
+  WriteReal(x);
+  y := 9.0;
+  x := y-1.0;
+  WriteReal(x);
+  y := 4.0;
+  x := y*2.0;
+  WriteReal(x);
+  y := 16.0;
+  x := y/2.0;
+  WriteReal(x);
+  i := -8;
+  WriteInt(i); 
+  j := 8;
+  i := -j;
+  WriteInt(i); 
+  x := -8.0;
+  WriteReal(x); 
+  y := 8.0;
+  x := -y;
+  WriteReal(x); 
+  s := -{1, 3..31};
+  WriteInt(SYSTEM.VAL(INTEGER, s));
+  t := {1, 3..31};
+  s := -t;
+  WriteInt(SYSTEM.VAL(INTEGER, s));
+END Pattern2b.

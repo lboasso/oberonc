@@ -1,0 +1,10 @@
+a$$$
+a$$$
+ab$$
+a$
+a$
+ab$
+abcd$
+abcd$
+$bcd$
+   2   3   2   3

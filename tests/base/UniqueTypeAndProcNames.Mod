@@ -1,0 +1,21 @@
+MODULE UniqueTypeAndProcNames;
+  TYPE T = RECORD a: INTEGER END;
+
+  PROCEDURE P3(i: INTEGER): INTEGER;
+  TYPE T = RECORD b: CHAR END;
+    PROCEDURE P2(j: INTEGER): INTEGER;
+      RETURN j+1
+    END P2;
+  BEGIN
+    RETURN i + P2(i)
+  END P3;
+
+  PROCEDURE P1(i: INTEGER): INTEGER;
+    PROCEDURE P2(j: INTEGER): INTEGER;
+      RETURN j+2
+    END P2;
+  BEGIN
+    RETURN i + P2(i)
+  END P1;
+
+END UniqueTypeAndProcNames.

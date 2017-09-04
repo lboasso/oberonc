@@ -1,0 +1,84 @@
+MODULE Strings1;
+  CONST y = "A";
+  VAR a,b : ARRAY 10 OF CHAR;
+      c : ARRAY 0 OF CHAR;
+      d, e : ARRAY 2 OF CHAR;
+      x : CHAR;
+      s0 : ARRAY 5 OF ARRAY 5 OF CHAR;
+      s1 : ARRAY 5 OF CHAR;
+      i : INTEGER;
+
+  PROCEDURE PrintMid(x : ARRAY OF CHAR);
+  BEGIN
+    WriteChar(x[LEN(x) DIV 2])
+  END PrintMid;
+  
+  PROCEDURE Cmp(x, y : ARRAY OF CHAR);
+  BEGIN
+    IF x = y  THEN WriteInt(-1) END;
+    IF y = x  THEN WriteInt(-2) END;
+    IF x # y  THEN WriteInt(-3) END;
+    IF y # x  THEN WriteInt(-4) END;
+    IF x > y  THEN WriteInt(-5) END;
+    IF y > x  THEN WriteInt(-6) END;
+    IF x < y  THEN WriteInt(-7) END;
+    IF y < x  THEN WriteInt(-8) END;
+    IF x >= y THEN WriteInt(-9) END;
+    IF y >= x THEN WriteInt(-10) END;
+    IF x <= y THEN WriteInt(-11) END;
+    IF y <= x THEN WriteInt(-12) END;
+  END Cmp;
+BEGIN
+  PrintMid("Hello");
+  WriteLn;
+  IF a = "Hello"         THEN WriteInt(0) END;
+  IF "Hello" = "Hello"   THEN WriteInt(1) END;
+  IF "Hello" = a         THEN WriteInt(2) END;
+  IF a # "Hello"         THEN WriteInt(3) END;
+  IF "Hello" # "Hello"   THEN WriteInt(4) END;
+  IF "Hello" # a         THEN WriteInt(5) END;
+  IF a > "Hello"         THEN WriteInt(6) END;
+  IF "Hello" > "Hello"   THEN WriteInt(7) END;
+  IF "Hello" > a         THEN WriteInt(8) END;
+  IF a < "Hello"         THEN WriteInt(9) END;
+  IF "Hello" < "Hello"   THEN WriteInt(10) END;
+  IF "Hello" < a         THEN WriteInt(11) END;
+  IF a >= "Hello"        THEN WriteInt(12) END;
+  IF "Hello" >= "Hello"  THEN WriteInt(13) END;
+  IF "Hello" >= a        THEN WriteInt(14) END;
+  IF a <= "Hello"        THEN WriteInt(15) END;
+  IF "Hello" <= "Hello"  THEN WriteInt(16) END;
+  IF "Hello" <= a        THEN WriteInt(17) END;
+  IF "HELL" = "HELLO"    THEN WriteInt(18) END;
+  WriteLn;
+  a := "Hello";
+  b := "World";
+  Cmp(a, b);
+  WriteLn;
+  b := "Hello";
+  Cmp(a, b);
+  WriteLn;
+  b := "";
+  Cmp(a, b);
+  WriteLn;
+  Cmp(a, c);
+  WriteLn;
+  d[0] := "A"; d[1] := "B";
+  e[0] := "A"; e[1] := "D";
+  Cmp(d, e);
+  WriteLn;
+  x := "A";
+  IF x = "A" THEN WriteInt(1) END;
+  IF "A" = x THEN WriteInt(2) END;
+  IF "A" = y THEN WriteInt(3) END;
+  s0[0] := "ZAB";
+  i := -1;
+  IF "ABC" < s0[1+i] THEN  WriteInt(4) END;
+  IF s0[1+i] > "ABC" THEN  WriteInt(5) END;
+  IF "ABC" < "ZBC" THEN WriteInt(6) END;
+  IF "A" < "Z" THEN WriteInt(7) END;
+  s1[0] := "A";
+  IF s1[1+i] = "A" THEN WriteInt(8) END;
+  IF "A" = s1[1+i] THEN WriteInt(9) END;
+  IF "A" = y THEN WriteInt(10) END;
+END Strings1.
