@@ -15,7 +15,7 @@ public class TestRunner {
     int[] failed = new int[1];
     String[] tests = {
       "VarInit", "DivMul", "ProcVariables0", "ProcVariables1", "ProcVariables2",
-      "ProcVariables3", "ProcVariables4", "ProcVariables5",
+      "ProcVariables3", "ProcVariables4", "ProcVariables5", "ProcVariables6",
       "RecordAndTypeExtension", "ProcComparisons", "FragileBaseClass",
       "Strings0", "Strings1", "Strings2", "OpenArrays2", "OpenArrays3",
       "TestABS", "TestCPS", "TestODD", "TestOOP", "SetTest", "Out0",
@@ -206,9 +206,17 @@ public class TestRunner {
 
   private static String getExpectedOutput(String name) {
     char[] expected = new char[2000];
+    String res;
+
     Files_FileDesc f = Files.Open((suitePath + name + ".txt\0").toCharArray());
-    Files.ReadStr(f, expected);
-    Files.Close(f);
-    return new String(expected, 0, Strings.Length(expected));
+    if(f == null) {
+      System.err.println("ERROR: cannot open " + suitePath + name + ".txt");
+      res = "";
+    } else {
+      Files.ReadStr(f, expected);
+      Files.Close(f);
+      res = new String(expected, 0, Strings.Length(expected));
+    }
+    return res;
   }
 }
