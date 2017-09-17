@@ -52,7 +52,7 @@ MODULE OJG;
     relmapAdr: ARRAY 2 OF INTEGER;  (*condition codes for relations with adr*)
     str: ARRAY maxStrx OF CHAR;
     TypeTest0: PROCEDURE (VAR x: Item; T: OJB.Type; isguard: BOOLEAN);
-  
+
   PROCEDURE curStack*(): INTEGER;
     RETURN topCtx.m.curStack
   END curStack;
@@ -79,7 +79,7 @@ MODULE OJG;
 
   PROCEDURE negated(op: INTEGER): INTEGER;
     VAR ret: INTEGER;
-  BEGIN 
+  BEGIN
     ret := 0;
     CASE op OF
        Opcodes.IFACMPEQ: ret := Opcodes.IFACMPNE
@@ -955,7 +955,7 @@ MODULE OJG;
   END MakeConstItem;
 
   PROCEDURE MakeRealItem*(VAR x: Item; val: REAL);
-  BEGIN 
+  BEGIN
     x.mode := OJB.Const; x.type := OJB.realType;
     x.a := SYSTEM.VAL(INTEGER, val); x.rdo := TRUE
   END MakeRealItem;
@@ -1108,7 +1108,7 @@ MODULE OJG;
         IF y.a # 0 THEN
           load(y); ClassFormat.putInsn(topCtx.m, Opcodes.IADD)
         END ;
-      ELSE load(x); load(y); ClassFormat.putInsn(topCtx.m, Opcodes.IADD) 
+      ELSE load(x); load(y); ClassFormat.putInsn(topCtx.m, Opcodes.IADD)
       END
     ELSE (*op = ORS.minus*)
       IF (x.mode = OJB.Const) & (y.mode = OJB.Const) THEN x.a := x.a - y.a
@@ -1325,7 +1325,7 @@ MODULE OJG;
       pushConst(1);
       ClassFormat.putInsn(topCtx.m, Opcodes.SWAP);
       ClassFormat.putInsn(topCtx.m, Opcodes.ISHL)
-    ELSE pushConst(1); load(x); ClassFormat.putInsn(topCtx.m, Opcodes.ISHL) 
+    ELSE pushConst(1); load(x); ClassFormat.putInsn(topCtx.m, Opcodes.ISHL)
     END
   END Singleton;
 
@@ -1426,7 +1426,7 @@ MODULE OJG;
      -> 4 & 31 = 4 & 11111
 
   *)
-   
+
   PROCEDURE In0*(VAR x: Item);   (* x := x IN y *)
   BEGIN
     IF x.mode = OJB.Const THEN
@@ -1812,7 +1812,7 @@ MODULE OJG;
       ELSIF type.form = OJB.Array THEN
         Descriptor(type, desc);
         ClassFormat.putTypeInsn(topCtx.m, Opcodes.ANEWARRAY, desc)
-      ELSE 
+      ELSE
         internalName(type, desc);
         ClassFormat.putTypeInsn(topCtx.m, Opcodes.ANEWARRAY, desc)
       END ;
@@ -1886,7 +1886,7 @@ MODULE OJG;
       w.mode := Stack;
       x.mode := OJB.Par;
       Store(x, w, FALSE)
-    ELSE 
+    ELSE
       AddOp(OJS.plus, x, w);
       w.mode := Stack;
       Store(x, w, FALSE)
@@ -1953,7 +1953,7 @@ MODULE OJG;
     IF x.mode = OJB.Const THEN
       ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKESTATIC, x.modName,
                                 x.name, x.type.signature, x.type.nofpar)
-    ELSE 
+    ELSE
       internalName(x.type, iname);
       ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKEVIRTUAL, iname,
                                 "invoke", x.type.signature, x.type.nofpar)
@@ -1977,6 +1977,10 @@ MODULE OJG;
   BEGIN
     IF (type # NIL) & (type.form # OJB.NoTyp) THEN
       load(x);
+      IF type = OJB.byteType THEN
+        pushConst(255);
+        ClassFormat.putInsn(topCtx.m, Opcodes.IAND)
+      END ;
       emitTypedReturn(x.type)
     ELSE ClassFormat.putInsn(topCtx.m, Opcodes.RETURNx)
     END ;
@@ -1995,7 +1999,7 @@ MODULE OJG;
        (y.a >= -128) & (y.a <= 127) THEN
       IF op = Opcodes.ISUB THEN y.a := -y.a END ;
       ClassFormat.putIincInsn(topCtx.m, x.a, y.a)
-    ELSE 
+    ELSE
       IF (y.mode # OJB.Const) & (y.mode # OJB.Var) THEN
         OJS.Mark("INC's second argument must be a constant or simple variable")
       END ;
@@ -2011,7 +2015,7 @@ MODULE OJG;
         ClassFormat.putInsn(topCtx.m, Opcodes.DUP2);
         pushTypedArray(x.type);
         x.mode := Stack
-      ELSE 
+      ELSE
         load(x)
       END ;
       load(y);
@@ -2038,14 +2042,14 @@ MODULE OJG;
       ClassFormat.putInsn(topCtx.m, Opcodes.DUP2);
       pushTypedArray(x.type);
       x.mode := Stack
-    ELSE 
+    ELSE
       load(x)
     END ;
     Singleton(y);
     load(y);
     IF inorex = 0 THEN
       ClassFormat.putInsn(topCtx.m, Opcodes.IOR)
-    ELSE 
+    ELSE
       pushConst(-1);
       ClassFormat.putInsn(topCtx.m, Opcodes.IXOR);
       ClassFormat.putInsn(topCtx.m, Opcodes.IAND)
@@ -2220,10 +2224,10 @@ MODULE OJG;
     CONST Ror = 3;
     VAR op: INTEGER;
   BEGIN
-    IF fct = 0 THEN 
-      op := Opcodes.ISHL 
-    ELSIF fct = 1 THEN 
-      op := Opcodes.ISHR 
+    IF fct = 0 THEN
+      op := Opcodes.ISHL
+    ELSIF fct = 1 THEN
+      op := Opcodes.ISHR
     ELSE op := Ror
     END ;
     load(x);
@@ -2231,7 +2235,7 @@ MODULE OJG;
     IF op = Ror THEN
       ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKESTATIC, "OberonRuntime",
                                 "ROR", "(II)I", 2)
-    ELSE  
+    ELSE
       ClassFormat.putInsn(topCtx.m, op)
     END
   END Shift;
@@ -2258,7 +2262,7 @@ MODULE OJG;
   END Bnot;
 
   PROCEDURE Open*(modid: ARRAY OF CHAR);
-    VAR ctx: ClassContext; 
+    VAR ctx: ClassContext;
   BEGIN
     ClassFormat.Init;
     strx := 0; check := TRUE;
@@ -2496,8 +2500,8 @@ BEGIN
   relmap[0] := Opcodes.IFICMPEQ; relmap[1] := Opcodes.IFICMPNE;
   relmap[2] := Opcodes.IFICMPLT; relmap[3] := Opcodes.IFICMPLE;
   relmap[4] := Opcodes.IFICMPGT; relmap[5] := Opcodes.IFICMPGE;
-  relmap0[0] := Opcodes.IFEQ; relmap0[1] := Opcodes.IFNE; 
-  relmap0[2] := Opcodes.IFLT; relmap0[3] := Opcodes.IFLE; 
+  relmap0[0] := Opcodes.IFEQ; relmap0[1] := Opcodes.IFNE;
+  relmap0[2] := Opcodes.IFLT; relmap0[3] := Opcodes.IFLE;
   relmap0[4] := Opcodes.IFGT; relmap0[5] := Opcodes.IFGE;
   relmapNil[0] := Opcodes.IFNULL; relmapNil[1] := Opcodes.IFNONNULL;
   relmapAdr[0] := Opcodes.IFACMPEQ;relmapAdr[1] := Opcodes.IFACMPNE;
