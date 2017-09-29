@@ -37,7 +37,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
 
   PROCEDURE qualident(VAR modName: ARRAY OF CHAR): OJB.Object;
     VAR obj: OJB.Object;
-  BEGIN 
+  BEGIN
     Strings.Copy(OJS.id, modName);
     obj := OJB.thisObj(); OJS.Get(sym);
     IF obj IS OJB.Module THEN
@@ -207,20 +207,20 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   END selector;
 
   (* Type Rule I.1, I.2, I.4 *)
-  PROCEDURE sameArrays(t0, t1: OJB.Type): BOOLEAN;
+  PROCEDURE SameArrays(t0, t1: OJB.Type): BOOLEAN;
   BEGIN
     RETURN (t0 = t1)
            OR (t0.form = OJB.Array) & (t1.form = OJB.Array) &
-              (t0.len = t1.len) & sameArrays(t0.base, t1.base)
-  END sameArrays;
+              (t0.len = t1.len) & SameArrays(t0.base, t1.base)
+  END SameArrays;
 
   (* Type Rule D.1, D.2 *)
-  PROCEDURE compatibleOpenArrays(t0, t1: OJB.Type): BOOLEAN;
+  PROCEDURE CompatibleOpenArrays(t0, t1: OJB.Type): BOOLEAN;
   BEGIN
     RETURN (t0 = t1)
            OR (t0.form = OJB.Array) & (t1.form = OJB.Array) & (t1.len < 0) &
-              compatibleOpenArrays(t0.base, t1.base)
-  END compatibleOpenArrays;
+              CompatibleOpenArrays(t0.base, t1.base)
+  END CompatibleOpenArrays;
 
   PROCEDURE EqualSignatures(t0, t1: OJB.Type): BOOLEAN;
     VAR p0, p1: OJB.Object; com: BOOLEAN;
@@ -232,7 +232,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         (* Type Rule A.1, A.2, A.3, B.3, B.4, I.1, I.2, I.3, I.4 *)
         IF (p0.class = p1.class) & (p0.rdo = p1.rdo) &
              ((p0.type = p1.type) OR
-               sameArrays(p0.type, p1.type) OR (* include same open arrays *)
+               SameArrays(p0.type, p1.type) OR (* include same open arrays *)
                (p0.type.form = OJB.Proc) & (p1.type.form = OJB.Proc) &
                EqualSignatures(p0.type, p1.type))
         THEN p0 := p0.next; p1 := p1.next
@@ -250,7 +250,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
            (* exclude a, b : ARRAY OF T *)
     RETURN (t0 = t1) & ~((t0.form = OJB.Array) & (t0.len < 0))
          (* exclude a : ARRAY OF T; b : ARRAY OF T *)
-      OR (t0.len > 0) & sameArrays(t0, t1)
+      OR (t0.len > 0) & SameArrays(t0, t1)
       OR (t0.form = OJB.Record) & (t1.form = OJB.Record) & IsExtension(t0, t1)
       OR ~varpar &
         ((t0.form = OJB.Pointer) & (t1.form = OJB.Pointer) &
@@ -266,7 +266,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF par # NIL THEN
       varpar := (par.class = OJB.Par) OR (par.class = OJB.ParArray);
       IF CompTypes(par.type, x.type, varpar) OR       (* Type Rule C, E, F *)
-         compatibleOpenArrays(x.type, par.type) THEN (* Type Rule G, D.1, D.2 *)
+         CompatibleOpenArrays(x.type, par.type) THEN (* Type Rule G, D.1, D.2 *)
         IF varpar & x.rdo THEN OJS.Mark("read only actual parameter")
         ELSIF ~varpar OR (par.class = OJB.ParArray) THEN
           IF x.mode = OJB.Typ THEN OJS.Mark("illegal value parameter") END ;
@@ -401,8 +401,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF sym = OJS.upto THEN
       OJS.Get(sym);
       OJG.Set0(x);
-      expression(y); 
-      CheckSetVal(y); 
+      expression(y);
+      CheckSetVal(y);
       OJG.Set1(x, y)
     ELSE OJG.Singleton(x)
     END ;
@@ -417,7 +417,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       OJG.MakeConstItem(x, OJB.setType, 0) (*empty set*)
     ELSE element(x);
       WHILE (sym < OJS.rparen) OR (sym > OJS.rbrace) DO
-        IF sym = OJS.comma THEN OJS.Get(sym) 
+        IF sym = OJS.comma THEN OJS.Get(sym)
         ELSIF sym # OJS.rbrace THEN OJS.Mark("missing comma")
         END ;
         element(y); OJG.SetOp(OJS.plus, x, y)
@@ -437,7 +437,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF sym = OJS.ident THEN
       obj := qualident(modName);
       IF obj.class = OJB.SFunc THEN StandFunc(x, obj.val, obj.type)
-      ELSE 
+      ELSE
         Strings.Copy(modName, x.modName);
         OJG.MakeItem(x, obj, level); selector(x);
         IF sym = OJS.lparen THEN
@@ -804,7 +804,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
             (* Type Rule C.6 *)
             ELSIF (x.type.form = OJB.Array) & (y.type.form = OJB.Array) &
                   (x.type.len > 0) & (y.type.len < 0) &
-                  sameArrays(x.type.base, y.type.base) THEN
+                  SameArrays(x.type.base, y.type.base) THEN
               OJG.storeArray1(x, y)
             (* Type Rule C.5 *)
             ELSIF (x.type.form = OJB.Array) & (x.type.base.form = OJB.Char) &
@@ -1005,7 +1005,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         new.next := obj; obj := new;
         OJS.Get(sym); new.expo := CheckExport();
         IF (sym # OJS.comma) & (sym # OJS.colon) THEN OJS.Mark("comma expected")
-        ELSIF sym = OJS.comma THEN OJS.Get(sym) 
+        ELSIF sym = OJS.comma THEN OJS.Get(sym)
         END
       END ;
       Check(OJS.colon, "colon expected"); tp := Type(FALSE);
@@ -1052,7 +1052,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     ptype.dsc := NIL;
     IF sym = OJS.lparen THEN
       OJS.Get(sym);
-      IF sym = OJS.rparen THEN OJS.Get(sym) 
+      IF sym = OJS.rparen THEN OJS.Get(sym)
       ELSE FPSection(size, nofpar);
         WHILE sym = OJS.semicolon DO OJS.Get(sym); FPSection(size, nofpar) END ;
         Check(OJS.rparen, "no )")
@@ -1146,9 +1146,11 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
              forward references are not fixed yet) *)
           NEW(type.base); Strings.Copy(ptbase.name, type.base.name)
         END ;
-        OJS.Get(sym) 
+        OJS.Get(sym)
       ELSE type.base := Type(FALSE);
-        IF type.base.form # OJB.Record THEN OJS.Mark("must point to record") END
+        IF (type.base.form # OJB.Record) OR (type.base.typobj = NIL) THEN
+          OJS.Mark("must point to named record")
+        END ;
       END
     ELSIF sym = OJS.procedure THEN
       OJS.Get(sym); OJB.OpenScope;
@@ -1341,7 +1343,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           ELSE Strings.Copy(impid, impid1)
           END ;
           OJB.Import(impid, impid1);
-          IF sym = OJS.comma THEN OJS.Get(sym) 
+          IF sym = OJS.comma THEN OJS.Get(sym)
           ELSIF sym = OJS.ident THEN OJS.Mark("comma missing")
           END
         END ;
@@ -1361,7 +1363,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       Check(OJS.end, "no END");
       IF sym = OJS.ident THEN
         IF OJS.id # modid THEN OJS.Mark("no match") END ;
-        OJS.Get(sym) 
+        OJS.Get(sym)
       ELSE OJS.Mark("identifier missing")
       END ;
       IF sym # OJS.period THEN OJS.Mark("period missing") END ;
