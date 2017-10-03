@@ -171,9 +171,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         Check(OJS.rbrak, "no ]")
       ELSIF sym = OJS.period THEN OJS.Get(sym);
         IF sym = OJS.ident THEN
-          IF x.type.form = OJB.Pointer THEN
-            OJG.DeRef(x); x.type := x.type.base
-          END ;
+          IF x.type.form = OJB.Pointer THEN x.type := x.type.base END ;
           IF x.type.form = OJB.Record THEN
             obj := OJB.thisfield(x.type); OJS.Get(sym);
             IF obj # NIL THEN OJG.FieldAccess(x, obj); x.type := obj.type
@@ -185,7 +183,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         END
       ELSIF sym = OJS.arrow THEN
         OJS.Get(sym);
-        IF x.type.form = OJB.Pointer THEN OJG.DeRef(x); x.type := x.type.base
+        IF x.type.form = OJB.Pointer THEN x.type := x.type.base
         ELSE OJS.Mark("not a pointer")
         END
       (*type guard*)
@@ -784,11 +782,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         ELSE selector(x);
           IF sym = OJS.becomes THEN (*assignment*)
             OJS.Get(sym); CheckReadOnly(x);
-            IF x.type.form = OJB.Array THEN
-              OJG.storeArray0(x)
-            ELSE
-              OJG.loadPar(x)
-            END ;
+            OJG.PrepAssign(x);
             expression(y);
             IF y.mode = OJB.Typ THEN
               OJS.Mark("illegal assignment")

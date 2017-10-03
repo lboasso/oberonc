@@ -1010,12 +1010,6 @@ MODULE OJG;
     x.mode := RegI
   END Index;
 
-  PROCEDURE DeRef*(VAR x: Item);
-  BEGIN
-    load(x);
-    x.a := 0; x.b := 0
-  END DeRef;
-
   PROCEDURE Not*(VAR x: Item);   (* x := ~x *)
     VAR t: INTEGER;
   BEGIN
@@ -1661,7 +1655,7 @@ MODULE OJG;
     END
   END storeArrayR;
 
-  PROCEDURE storeArray0*(VAR x: Item);
+  PROCEDURE storeArray0(VAR x: Item);
   BEGIN
     load(x);
     x.a := topCtx.numTmpVars;
@@ -1855,6 +1849,15 @@ MODULE OJG;
     END ;
     topCtx.storeStmt := NIL
   END storeVarPar;
+
+  PROCEDURE PrepAssign*(VAR x: Item);
+  BEGIN
+    IF x.type.form = OJB.Array THEN
+      storeArray0(x)
+    ELSE
+      loadPar(x)
+    END
+  END PrepAssign;
 
   PROCEDURE For0*(VAR x, y: Item);
   BEGIN
