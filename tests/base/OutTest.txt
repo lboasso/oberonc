@@ -1,0 +1,5 @@
+10
+Hello
+ABC
+AB
+A

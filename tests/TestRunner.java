@@ -28,7 +28,7 @@ public class TestRunner {
       "Out2", "TestReturn0", "CaseNum0", "CaseNum1", "TestINCLAndEXCL",
       "CaseRecord0", "CaseRecord1", "CaseRecord2", "TestTypeConvFun",
       "TestFor1", "Out1", "TestAssert", "CaseChar0", "Out6", "TestSystemVal",
-      "TestNestedProcs", "Pattern1", "TestStringsMod"
+      "TestNestedProcs", "Pattern1", "TestStringsMod", "OutTest"
     };
     successful[0] = 0;
     failed[0] = 0;

@@ -9,17 +9,25 @@ public final class Out {
     int i = 0;
     int len = str.length;
     while(i < len && str[i] != '\0') {
-      System.out.print(str[i]);
       i++;
     }
+    System.out.print(new String(str, 0, i));
   }
 
   public static void Real(float x, int n) {
-    System.out.printf("%" + n + "f", x);
+    if(n <= 0) {
+      System.out.print(x);
+    } else {
+      System.out.printf("%" + n + "f", x);
+    }
   }
 
   public static void Int(int x, int n) {
-    System.out.printf("%" + n + "d", x);
+    if(n <= 0) {
+      System.out.print(x);
+    } else {
+      System.out.printf("%" + n + "d", x);
+    }
   }
 
   public static void Ln() {
