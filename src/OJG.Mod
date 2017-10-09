@@ -831,7 +831,7 @@ MODULE OJG;
       ELSE
         xt := x.type
       END ;
-      IF (x.mode = OJB.Var) OR (x.mode = OJB.ParArray) THEN
+      IF (x.mode = OJB.Var) OR (x.mode = OJB.ParStruct) THEN
         IF x.r > 0 THEN
           (*local*)
           pushTypedLocal(x)
@@ -1564,37 +1564,46 @@ MODULE OJG;
     END
   END StringRelation;
 
+  PROCEDURE makeCopyDesc(VAR s, desc: ARRAY OF CHAR);
+    VAR i: INTEGER;
+  BEGIN
+    i := Strings.Write("(L", desc, 0);
+    i := Strings.Write(s, desc, i);
+    i := Strings.Write(";)V", desc, i);
+    IF i = -1 THEN OJS.Mark("Maximum descriptor length reached") END
+  END makeCopyDesc;
+
+
   (* Code generation of Assignments *)
 
   PROCEDURE Store*(VAR x, y: Item; storeStruct: BOOLEAN);   (* x := y *)
     VAR  desc, typeName :ClassFormat.Descriptor;
-      i: INTEGER;
   BEGIN
     load(y);
     IF storeStruct THEN
-      internalName(y.type, typeName);
-      i := Strings.Write("()", desc, 0);
-      DescriptorAt(y.type, desc, i);
+      internalName(x.type, typeName);
+      makeCopyDesc(typeName, desc);
       ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKEVIRTUAL, typeName,
-                                "copy", desc, 0)
-    END ;
-    IF (x.mode = OJB.Var) OR (x.mode = Stack) THEN
-      IF x.r > 0 THEN (*local*)
-        storeTypedLocal(x)
-      ELSE
+                                "copyFrom", desc, 1)
+    ELSE
+      IF (x.mode = OJB.Var) OR (x.mode = Stack) OR (x.mode = OJB.ParStruct) THEN
+        IF x.r > 0 THEN (*local*)
+          storeTypedLocal(x)
+        ELSE
+          Descriptor(x.type, desc);
+          ClassFormat.putFieldInsn(topCtx.m, Opcodes.PUTSTATIC, x.modName,
+                                   x.name, desc)
+        END
+      ELSIF x.mode = RegI THEN
+        storeTypedArray(x.type)
+      ELSIF x.mode = Field THEN
         Descriptor(x.type, desc);
-        ClassFormat.putFieldInsn(topCtx.m, Opcodes.PUTSTATIC, x.modName,
+        ClassFormat.putFieldInsn(topCtx.m, Opcodes.PUTFIELD, x.recordName,
                                  x.name, desc)
+      ELSIF x.mode = OJB.Par THEN
+        storeTypedArray(x.type)
+      ELSE OJS.Mark("illegal assignment")
       END
-    ELSIF x.mode = RegI THEN
-      storeTypedArray(x.type)
-    ELSIF x.mode = Field THEN
-      Descriptor(x.type, desc);
-      ClassFormat.putFieldInsn(topCtx.m, Opcodes.PUTFIELD, x.recordName,
-                               x.name, desc)
-    ELSIF x.mode = OJB.Par THEN
-      storeTypedArray(x.type)
-    ELSE OJS.Mark("illegal assignment")
     END
   END Store;
 
@@ -1635,23 +1644,28 @@ MODULE OJG;
       (* as we incremented index(= last used local) we have to
          update topCtx.numTmpVars as it is still pointing to the
          first used local *)
-      topCtx.numTmpVars := topCtx.numTmpVars + i;
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, x.a);
-      lastTmp := pushIndexes2(i);
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp);
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, y.a);
-      lastTmp := pushIndexes2(i);
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp);
-      pushTypedArray(type);
       IF ~isPrimitiveType(type) & (type.form # OJB.Pointer) &
         (type.form # OJB.Proc) THEN
-        j := Strings.Write("()", desc, 0);
-        DescriptorAt(type, desc, j);
+        topCtx.numTmpVars := topCtx.numTmpVars + i + 1;
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, x.a);
+        lastTmp := pushIndexes2(i+1);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, y.a);
+        lastTmp := pushIndexes2(i+1);
         internalName(type, iname);
+        makeCopyDesc(iname, desc);
         ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKEVIRTUAL, iname,
-                                  "copy", desc, 0)
-      END ;
-      storeTypedArray(type);
+                                  "copyFrom", desc, 1);
+      ELSE
+        topCtx.numTmpVars := topCtx.numTmpVars + i;
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, x.a);
+        lastTmp := pushIndexes2(i);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, y.a);
+        lastTmp := pushIndexes2(i);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp);
+        pushTypedArray(type);
+        storeTypedArray(type)
+      END
     END
   END storeArrayR;
 
@@ -1854,6 +1868,8 @@ MODULE OJG;
   BEGIN
     IF x.type.form = OJB.Array THEN
       storeArray0(x)
+    ELSIF x.type.form = OJB.Record THEN
+      load(x)
     ELSE
       loadPar(x)
     END
@@ -2297,33 +2313,23 @@ MODULE OJG;
     END
   END Header;
 
-  PROCEDURE makeCopyDesc(VAR s, desc: ARRAY OF CHAR);
-    VAR i: INTEGER;
-  BEGIN
-    i := Strings.Write("()L", desc, 0);
-    i := Strings.Write(s, desc, i);
-    i := Strings.WriteChar(";", desc, i);
-    IF i = -1 THEN OJS.Mark("Maximum descriptor length reached") END
-  END makeCopyDesc;
-
   PROCEDURE copyRecord(x: OJB.Object);
     VAR desc, iname: ClassFormat.Descriptor;
   BEGIN
-    ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
     ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 0);
     loadRef(x);
-    Strings.Append("()", desc);
-    DescriptorAt(x.type, desc, 2);
+    ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
+    loadRef(x);
     internalName(x.type, iname);
-    ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKEVIRTUAL, iname, "copy",
-                              desc, 0);
-    storeRef(x)
+    makeCopyDesc(iname, desc);
+    ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKEVIRTUAL, iname,"copyFrom",
+                              desc, 1)
   END copyRecord;
 
   PROCEDURE copyPrimitiveField(x: OJB.Object);
   BEGIN
-    ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
     ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 0);
+    ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
     loadRef(x);
     storeRef(x)
   END copyPrimitiveField;
@@ -2348,24 +2354,30 @@ MODULE OJG;
                                                                     cond), 0);
       Fixup(end)
     ELSE
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
-      loadRef(x);
-      lastTmp := pushIndexes(i, tmpVars);
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp.val);
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 0);
-      loadRef(x);
-      lastTmp := pushIndexes(i, tmpVars);
-      ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp.val);
-      pushTypedArray(type);
       IF ~isPrimitiveType(type) & (type.form # OJB.Pointer) &
         (type.form # OJB.Proc) THEN
-        Strings.Append("()", desc);
-        DescriptorAt(type, desc, 2);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 0);
+        loadRef(x);
+        lastTmp := pushIndexes(i+1, tmpVars);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
+        loadRef(x);
+        lastTmp := pushIndexes(i+1, tmpVars);
         internalName(type, iname);
+        makeCopyDesc(iname, desc);
         ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKEVIRTUAL, iname,
-                                  "copy", desc, 0)
-      END ;
-      storeTypedArray(type)
+                                  "copyFrom", desc, 1)
+      ELSE
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 0);
+        loadRef(x);
+        lastTmp := pushIndexes(i, tmpVars);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp.val);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
+        loadRef(x);
+        lastTmp := pushIndexes(i, tmpVars);
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, lastTmp.val);
+        pushTypedArray(type);
+        storeTypedArray(type)
+      END
     END
   END copyArrayR;
 
@@ -2378,7 +2390,7 @@ MODULE OJG;
     VAR type: OJB.Type; tempVars: OJB.Object;
        num: INTEGER;
   BEGIN
-    (* 2 locals so far: this + new typeName *)
+    (* 2 locals so far: this + copyFrom's parameter *)
     num := 2;
     tempVars := createArraysTempVars(x, num, FALSE);
     WHILE x # NIL DO
@@ -2403,14 +2415,10 @@ MODULE OJG;
     internalName(obj.type, typeName);
     makeCopyDesc(typeName, desc);
     topCtx.m := ClassFormat.NewMI(topCtx.c, Opcodes.ACCxPUBLIC +
-                                  Opcodes.ACCxFINAL, "copy", desc);
+                                  Opcodes.ACCxFINAL, "copyFrom", desc);
     clearCtx(topCtx);
-    genNew(typeName);
-    ClassFormat.putVarInsn(topCtx.m, Opcodes.ASTORE, 1);
-    topCtx.numTmpVars := 2;
     copyState(obj.type.dsc);
-    ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, 1);
-    ClassFormat.putInsn(topCtx.m, Opcodes.ARETURN);
+    ClassFormat.putInsn(topCtx.m, Opcodes.RETURNx);
     ClassFormat.setMaxVars(topCtx.m, topCtx.numTmpVars);
     closeContext
   END CopyMethod;

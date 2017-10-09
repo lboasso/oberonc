@@ -39,7 +39,9 @@ MODULE RecordAndTypeExtension;
     b := a;
     PrintBool(a = b);
     PrintBool(a # b);
-  END testRelation;  PROCEDURE typeTest(VAR a3 : A);
+  END testRelation;
+
+  PROCEDURE typeTest(VAR a3 : A);
     VAR
       pa2 : POINTER TO A;
       pa2T : PTRA;

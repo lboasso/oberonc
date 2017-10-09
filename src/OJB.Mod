@@ -18,7 +18,7 @@ MODULE OJB;
 
   CONST versionkey = 1; maxTypTab = 500;
     (* class values *) Head = 0;
-      Const* = 1; Var* = 2; Par* = 3; ParArray* = 4;
+      Const* = 1; Var* = 2; Par* = 3; ParStruct* = 4;
       Fld* = 5; Typ* = 6; SProc* = 7; SFunc* = 8; Mod* = 9;
 
     (* form values *)
@@ -420,7 +420,7 @@ MODULE OJB;
           Files.Close(f);
           rename := Files.Rename(tmpFile, filename)
         ELSE Files.Close(f); OJS.Mark("new symbol file inhibited") END ;
-      ELSE 
+      ELSE
         newSF := FALSE; key := sum;
         Files.Close(f);
         r := Files.Delete(tmpFile)
@@ -445,7 +445,7 @@ MODULE OJB;
   BEGIN NEW(tp); tp.form := form; tp.ref := ref; tp.base := NIL;
     typtab[ref] := tp RETURN tp
   END type;
-  
+
   PROCEDURE enter(name: ARRAY OF CHAR; cl: INTEGER; type: Type; n: INTEGER);
     VAR obj: Object;
   BEGIN NEW(obj); Strings.Copy(name, obj.name); obj.class := cl;

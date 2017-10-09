@@ -140,7 +140,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           ELSE
             OJS.Mark("not an extension")
           END
-        ELSIF (xt.form = OJB.Record) & (x.mode = OJB.Par) THEN
+        ELSIF (xt.form = OJB.Record) & (x.mode = OJB.ParStruct) THEN
           IF IsExtension(xt, T) THEN  OJG.TypeTest(x, T, guard); x.type := T
           ELSE OJS.Mark("not an extension")
           END
@@ -262,11 +262,11 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   BEGIN
     expression(x);
     IF par # NIL THEN
-      varpar := (par.class = OJB.Par) OR (par.class = OJB.ParArray);
+      varpar := (par.class = OJB.Par) OR (par.class = OJB.ParStruct);
       IF CompTypes(par.type, x.type, varpar) OR       (* Type Rule C, E, F *)
          CompatibleOpenArrays(x.type, par.type) THEN (* Type Rule G, D.1, D.2 *)
         IF varpar & x.rdo THEN OJS.Mark("read only actual parameter")
-        ELSIF ~varpar OR (par.class = OJB.ParArray) THEN
+        ELSIF ~varpar OR (par.class = OJB.ParStruct) THEN
           IF x.mode = OJB.Typ THEN OJS.Mark("illegal value parameter") END ;
           OJG.ValueParam(x)
         ELSE (*par.class = Par*)
@@ -328,7 +328,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF npar # 0 THEN expression(x); n := 1 END ;
     WHILE sym = OJS.comma DO
       OJS.Get(sym);
-      IF x.mode # OJB.Typ THEN (* x.mode == ORB.Typ for SYSTEM.VAL(x, y) *)
+      IF x.mode # OJB.Typ THEN (* x.mode = ORB.Typ for SYSTEM.VAL(x, y) *)
         OJG.ValueParam(x)
       END ;
       expression(y);
@@ -832,6 +832,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           ELSIF x.type.form = OJB.Proc THEN
             IF x.type.nofpar > 0 THEN OJS.Mark("missing parameters") END ;
             IF x.type.base.form = OJB.NoTyp THEN
+              OJG.PrepCall(x);
               OJG.Call(x)
             ELSE
               OJS.Mark("not a procedure")
@@ -896,7 +897,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           obj := qualident(modName); orgtype := obj.type;
           Strings.Copy(modName, x.modName);
           IF (orgtype.form = OJB.Pointer) OR (orgtype.form = OJB.Record) &
-             (obj.class = OJB.Par) THEN
+             (obj.class = OJB.ParStruct) THEN
             Check(OJS.of, "OF expected"); TypeCase(obj, x); L0 := 0;
             WHILE sym = OJS.bar DO
               OJS.Get(sym); L0 := OJG.FJump(L0); OJG.Fixup(x.a);
@@ -1024,11 +1025,12 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF sym = OJS.var THEN OJS.Get(sym); cl := OJB.Par ELSE cl := OJB.Var END ;
     first := IdentList(cl); tp := FormalType(); rdo := FALSE;
     IF (cl = OJB.Var) & (tp.form >= OJB.Array) THEN
-      (*cl = ORB.Par; not needed as arrays/records are references in JVM*)
+      (* cl = ORB.Par; not needed as arrays/records are references in JVM*)
       rdo := TRUE
-    ELSIF (cl = OJB.Par) & (tp.form = OJB.Array) THEN
-      (* arrays are references in JVM, OJB.ParArray is equivalent to OJB.Var *)
-      cl := OJB.ParArray
+    ELSIF (cl = OJB.Par) & (tp.form >= OJB.Array) THEN
+      (* arrays/records are references in JVM, OJB.ParStruct is equivalent
+         to OJB.Var but for structured types *)
+      cl := OJB.ParStruct
     END ;
     obj := first;
     WHILE obj # NIL DO
