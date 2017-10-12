@@ -1416,20 +1416,18 @@ MODULE OJG;
                         -> the result is not 0 so it means that 4 is
                            indeed in {3..5}
 
-     We need to make sure that 4 is < MaxSetElement
-     -> 4 & 31 = 4 & 11111
-
+     x IN y
+     If x is not in the implementation defined SET range {0..MaxSetElement-1}
+     the IN operator is undefined
   *)
 
   PROCEDURE In0*(VAR x: Item);   (* x := x IN y *)
   BEGIN
     IF x.mode = OJB.Const THEN
-      x.a := LSL(1, AND(x.a, (MaxSetElement -1)));
+      x.a := LSL(1, x.a);
       load(x)
     ELSE
       load(x);
-      pushConst(MaxSetElement -1);
-      ClassFormat.putInsn(topCtx.m, Opcodes.IAND);
       pushConst(1);
       ClassFormat.putInsn(topCtx.m, Opcodes.SWAP);
       ClassFormat.putInsn(topCtx.m, Opcodes.ISHL)

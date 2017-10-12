@@ -1,6 +1,6 @@
 MODULE SetTest;
 IMPORT SYSTEM;
-  CONST 
+  CONST
         eight = 8;
         c0 = {6..eight};
         c1 = {0..4, 10, 30..31};
@@ -8,7 +8,7 @@ IMPORT SYSTEM;
   VAR  s : SET;
        x,y : INTEGER;
        b : BOOLEAN;
-       
+
   PROCEDURE PrintSet(x : SET);
   VAR i : INTEGER;
   BEGIN
@@ -24,7 +24,7 @@ IMPORT SYSTEM;
   PROCEDURE testRelation;
     VAR a : ARRAY 1 OF SET;
         b: SET;
-  BEGIN 
+  BEGIN
     a[0] := {4, 5, 3};
     b := {4, 5, 1, 8};
     IF a[0] = b THEN WriteInt(3) END;
@@ -47,7 +47,7 @@ IMPORT SYSTEM;
     WriteLn;
   END testRelation;
   PROCEDURE testSetAndArrayAndField;
-    TYPE     
+    TYPE
       V = RECORD
             s : SET;
           END;
@@ -157,7 +157,7 @@ BEGIN
   PrintBool(31 IN {0..2});
   x := 31;
   PrintBool(x IN {0..2});
-  x := 100;
+  x := -100;
   PrintBool(x IN {0..2});
   x := 33;
   PrintBool(x IN {0..2}); (* this is wrong as x >= 32, maybe we should put a check at runtime *)
