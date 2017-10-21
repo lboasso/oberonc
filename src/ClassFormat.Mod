@@ -11,7 +11,7 @@
 *)
 MODULE ClassFormat;
   IMPORT Strings, Files, CpCache, Opcodes, OJS;
-  
+
   CONST
     CpMax = 10000H;
     DescLenMax = 100;
@@ -30,7 +30,7 @@ MODULE ClassFormat;
     STR = 8;
     INT* = 3;
     FLOAT* = 4;
-    
+
   TYPE
     Descriptor* = ARRAY DescLenMax OF CHAR;
     CF* = POINTER TO CFDesc;
@@ -329,7 +329,7 @@ MODULE ClassFormat;
   PROCEDURE cpWriteFiledRef(cf: CF; owner, name, desc: ARRAY OF CHAR): INTEGER;
     RETURN cpWriteRef(cf, FIELD, owner, name, desc)
   END cpWriteFiledRef;
-  
+
   PROCEDURE cpWriteMethodRef(cf: CF; owner, name, desc: ARRAY OF CHAR): INTEGER;
     RETURN cpWriteRef(cf, METH, owner, name, desc)
   END cpWriteMethodRef;
@@ -470,7 +470,7 @@ MODULE ClassFormat;
     END
     RETURN cf
   END NewCF;
-  
+
   PROCEDURE NewMI*(classFormat: CF; acc: INTEGER;
                    n, desc: ARRAY OF CHAR): MethodInfo;
     VAR mi: MethodInfo;
@@ -500,21 +500,21 @@ MODULE ClassFormat;
       mi.maxStack := mi.curStack
     END
   END setMaxStack;
-  
+
   PROCEDURE getPC*(mi: MethodInfo): INTEGER;
     RETURN mi.pc
   END getPC;
-  
+
   PROCEDURE subtractCurrentLocationTo*(mi: MethodInfo; L: INTEGER): INTEGER;
     RETURN mi.codeIndexFor[L]-mi.i
   END subtractCurrentLocationTo;
-  
+
   PROCEDURE fix(mi: MethodInfo; at, with: INTEGER);
     VAR x: INTEGER;
   BEGIN
     x := putShort(mi.code, at+1, with)
   END fix;
-  
+
   PROCEDURE FixLink*(mi: MethodInfo; L: INTEGER);
     VAR L1, j: INTEGER;
   BEGIN
@@ -536,7 +536,7 @@ MODULE ClassFormat;
       L0 := L1
     END
   END FixLinkWith;
-  
+
   PROCEDURE merged*(mi: MethodInfo; L0, L1: INTEGER): INTEGER;
     VAR L2, L3, j: INTEGER;
   BEGIN
@@ -552,7 +552,7 @@ MODULE ClassFormat;
     END
     RETURN L1
   END merged;
-  
+
   PROCEDURE saveLocation(mi: MethodInfo);
   BEGIN
     IF mi.pc < JumpsMax THEN
@@ -562,7 +562,7 @@ MODULE ClassFormat;
     END;
     INC(mi.pc)
   END saveLocation;
-  
+
   PROCEDURE putMethodInsn*(mi: MethodInfo; opcode: INTEGER;
                            owner, name, desc: ARRAY OF CHAR; args: INTEGER);
   BEGIN
@@ -644,7 +644,7 @@ MODULE ClassFormat;
     mi.i := putByte(mi.code, mi.i, opcode);
     mi.i := putShort(mi.code, mi.i, cpWriteClass(mi.cf, type))
   END putTypeInsn;
-  
+
   PROCEDURE putMultiANewArrayInsn*(mi: MethodInfo; desc: ARRAY OF CHAR;
                                    dims: INTEGER);
   BEGIN
@@ -656,7 +656,7 @@ MODULE ClassFormat;
     mi.i := putByte(mi.code, mi.i, dims)
   END putMultiANewArrayInsn;
 
-  PROCEDURE putTableSwitchInsn*(mi: MethodInfo; min, max, dflt: INTEGER;
+  PROCEDURE putTableSwitchInsn*(mi: MethodInfo; min, max, dflt, nLables: INTEGER;
                                 labels: ARRAY OF INTEGER);
     VAR j: INTEGER;
    BEGIN
@@ -667,11 +667,11 @@ MODULE ClassFormat;
     mi.i := putInt(mi.code, mi.i, dflt);
     mi.i := putInt(mi.code, mi.i, min);
     mi.i := putInt(mi.code, mi.i, max);
-    FOR j := 0 TO LEN(labels)-1 DO
+    FOR j := 0 TO nLables-1 DO
       mi.i := putInt(mi.code, mi.i, labels[j])
     END
   END putTableSwitchInsn;
-  
+
   PROCEDURE putIincInsn*(mi: MethodInfo; var, increment: INTEGER);
   BEGIN
     incStack(mi, Opcodes.IINC);
@@ -680,7 +680,7 @@ MODULE ClassFormat;
     mi.i := putByte(mi.code, mi.i, var);
     mi.i := putByte(mi.code, mi.i, increment)
   END putIincInsn;
-  
+
   PROCEDURE putLdcInsnInt*(mi: MethodInfo; type, c: INTEGER);
     VAR x: INTEGER;
   BEGIN
@@ -710,7 +710,7 @@ MODULE ClassFormat;
       mi.i := putShort(mi.code, mi.i, x)
     END
   END putLdcInsnStr;
-  
+
   PROCEDURE putVarInsn*(mi: MethodInfo; opcode, var: INTEGER);
     VAR opt: INTEGER;
   BEGIN
@@ -730,7 +730,7 @@ MODULE ClassFormat;
       mi.i := putByte(mi.code, mi.i, var)
     END
   END putVarInsn;
-  
+
   PROCEDURE putFieldInsn*(mi: MethodInfo; opcode: INTEGER;
                           owner, name, desc: ARRAY OF CHAR);
   BEGIN
@@ -739,7 +739,7 @@ MODULE ClassFormat;
     mi.i := putByte(mi.code, mi.i, opcode);
     mi.i := putShort(mi.code, mi.i, cpWriteFiledRef(mi.cf, owner, name, desc))
   END putFieldInsn;
-  
+
   PROCEDURE putIntInsn*(mi: MethodInfo; opcode, operand: INTEGER);
   BEGIN
     incStack(mi, opcode);
@@ -760,7 +760,7 @@ MODULE ClassFormat;
     mi.i := putByte(mi.code, mi.i, opcode);
     mi.i := putShort(mi.code, mi.i, to)
   END putJumpInsn;
-  
+
   PROCEDURE putGotoInsn*(mi: MethodInfo; to, incr: INTEGER);
   BEGIN
     INC(mi.curStack, incr);
@@ -773,14 +773,14 @@ MODULE ClassFormat;
       mi.i := putInt(mi.code, mi.i, to)
     END
   END putGotoInsn;
-  
+
   PROCEDURE putInsn*(mi: MethodInfo; opcode: INTEGER);
   BEGIN
     incStack(mi, opcode);
     saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, opcode)
   END putInsn;
-  
+
   PROCEDURE setMaxVars*(mi: MethodInfo; locals: INTEGER);
   BEGIN
     mi.maxLocals := locals

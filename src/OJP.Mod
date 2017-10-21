@@ -39,14 +39,14 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     VAR obj: OJB.Object;
   BEGIN
     Strings.Copy(OJS.id, modName);
-    obj := OJB.thisObj(); OJS.Get(sym);
+    obj := OJB.thisObj(OJS.id); OJS.Get(sym);
     IF obj IS OJB.Module THEN
       Strings.Copy(obj(OJB.Module).orgname, modName)
     END ;
     IF obj = NIL THEN OJS.Mark("undef"); obj := dummy END ;
     IF (sym = OJS.period) & (obj.class = OJB.Mod) THEN
       OJS.Get(sym);
-      IF sym = OJS.ident THEN obj := OJB.thisimport(obj); OJS.Get(sym);
+      IF sym = OJS.ident THEN obj := OJB.thisimport(obj, OJS.id); OJS.Get(sym);
         IF obj = NIL THEN OJS.Mark("undef"); obj := dummy END
       ELSE OJS.Mark("identifier expected"); obj := dummy
       END
@@ -120,6 +120,17 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     END
     RETURN expo
   END CheckExport;
+
+  PROCEDURE FindObjFrom(modid: ARRAY OF CHAR; VAR x: OJG.Item): OJB.Object;
+    VAR obj: OJB.Object;
+  BEGIN
+    IF (x.mode = OJB.Var) OR (x.mode = OJB.ParStruct) THEN
+      obj := OJB.FindObj(modid, x.modName, x.name)
+    ELSE
+      obj := NIL
+    END
+    RETURN obj
+  END FindObjFrom;
 
   PROCEDURE IsExtension(t0, t1: OJB.Type): BOOLEAN;
   BEGIN (*t1 is an extension of t0*)
@@ -670,7 +681,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         TypeTest(x, typobj.type, FALSE); obj.caseOrgType := obj.type;
         obj.type := typobj.type;
         OJG.CFJump(x); Check(OJS.colon, ": expected"); StatSequence
-      ELSE OJG.CFJump(x); OJS.Mark("type id expected")
+      ELSE OJS.Mark("type id expected"); OJG.CFJump(x)
       END
     END TypeCase;
 
@@ -747,8 +758,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       L0 := 0;
       end := 0;
       n := 0;
-      L0 := OJG.CaseIn(L0);
-      Check(OJS.of, "OF expected");
+      L0 := OJG.CaseIn(caseExpr, L0);
       Case(caseExpr.type.form, n, tab);
       end := OJG.FJump(end);
       WHILE sym = OJS.bar DO
@@ -893,26 +903,28 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         END
       ELSIF sym = OJS.case THEN
         OJS.Get(sym);
-        IF sym = OJS.ident THEN
-          obj := qualident(modName); orgtype := obj.type;
-          Strings.Copy(modName, x.modName);
-          IF (orgtype.form = OJB.Pointer) OR (orgtype.form = OJB.Record) &
-             (obj.class = OJB.ParStruct) THEN
-            Check(OJS.of, "OF expected"); TypeCase(obj, x); L0 := 0;
-            WHILE sym = OJS.bar DO
-              OJS.Get(sym); L0 := OJG.FJump(L0); OJG.Fixup(x.a);
-              obj.type := orgtype; obj.caseOrgType := NIL;
-              TypeCase(obj, x)
-            END ;
-            OJG.Fixup(x.a); OJG.Fixup(L0); obj.type := orgtype
-          ELSIF (orgtype.form = OJB.Int) OR (orgtype.form = OJB.Char) THEN
-            OJG.MakeItem(x, obj, level);
-            CasePart(x)
-          ELSE OJS.Mark("inadmissible type");
-            Check(OJS.of, "OF expected"); SkipCase;
-            WHILE sym = OJS.bar DO SkipCase END
-          END
-        ELSE OJS.Mark("ident expected")
+        expression(x);
+        Check(OJS.of, "OF expected");
+        obj := FindObjFrom(modid, x);
+        IF (obj # NIL) & ((obj.type.form = OJB.Pointer) OR
+                            (obj.type.form = OJB.Record) &
+                            (obj.class = OJB.ParStruct)) THEN
+          orgtype := obj.type;
+          TypeCase(obj, x); L0 := 0;
+          WHILE sym = OJS.bar DO
+            OJS.Get(sym); L0 := OJG.FJump(L0); OJG.Fixup(x.a);
+            obj.type := orgtype; obj.caseOrgType := NIL;
+            TypeCase(obj, x)
+          END ;
+          OJG.Fixup(x.a); OJG.Fixup(L0); obj.type := orgtype
+        ELSIF (obj = NIL) & ((x.type.form = OJB.Pointer) OR
+                             (x.type.form = OJB.Record)) THEN
+          OJS.Mark("identifier expected")
+        ELSIF (x.type.form = OJB.Int) OR (x.type.form = OJB.Char) THEN
+          CasePart(x)
+        ELSE OJS.Mark("inadmissible type");
+          SkipCase;
+          WHILE sym = OJS.bar DO SkipCase END
         END ;
         Check(OJS.end, "no END")
       END ;
@@ -1124,7 +1136,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       NEW(type);  type.form := OJB.Pointer; type.base := OJB.intType;
       Strings.Copy(modid, type.modName);
       IF sym = OJS.ident THEN
-        obj := OJB.thisObj();
+        obj := OJB.thisObj(OJS.id);
         IF obj # NIL THEN
           IF (obj.class = OJB.Typ) &
              (obj.type.form IN {OJB.Record, OJB.NoTyp}) THEN

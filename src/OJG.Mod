@@ -19,7 +19,7 @@ MODULE OJG;
       type*, caseOrgType*: OJB.Type;
       a*, b*, r: INTEGER;
       rdo*: BOOLEAN;  (*read only*)
-      name: OJS.Ident;
+      name*: OJS.Ident;
       modName*: OJS.Ident;
       recordName: ClassFormat.Descriptor
     END ;
@@ -1667,13 +1667,13 @@ MODULE OJG;
     END
   END storeArrayR;
 
-  PROCEDURE storeArray0(VAR x: Item);
+  PROCEDURE storeTempLocal(VAR x: Item);
   BEGIN
     load(x);
     x.a := topCtx.numTmpVars;
     storeTypedLocal(x);
     INC(topCtx.numTmpVars)
-  END storeArray0;
+  END storeTempLocal;
 
   PROCEDURE storeArray1*(VAR x, y: Item);
     VAR end: INTEGER;
@@ -1865,7 +1865,7 @@ MODULE OJG;
   PROCEDURE PrepAssign*(VAR x: Item);
   BEGIN
     IF x.type.form = OJB.Array THEN
-      storeArray0(x)
+      storeTempLocal(x)
     ELSIF x.type.form = OJB.Record THEN
       load(x)
     ELSE
@@ -1910,7 +1910,9 @@ MODULE OJG;
     END
   END For2;
 
-  PROCEDURE CaseIn*(L: INTEGER): INTEGER;
+  PROCEDURE CaseIn*(VAR x: Item; L: INTEGER): INTEGER;
+  BEGIN
+    storeTempLocal(x)
     RETURN FJump(L)
   END CaseIn;
 
@@ -1927,12 +1929,16 @@ MODULE OJG;
     VAR max, lastLow, nLables, i, j: INTEGER;
       all: ARRAY NofCases OF INTEGER;
   BEGIN
-    max := tab[n-1].high;
-    lastLow := tab[0].low;
-    nLables := ABS(max - lastLow + 1);
+    IF n > 0 THEN
+      max := tab[n-1].high;
+      lastLow := tab[0].low;
+      nLables := ABS(max - lastLow + 1);
+    ELSE
+      max := 0; lastLow := 0; nLables := 0;
+    END ;
     IF nLables < NofCases THEN
       ClassFormat.FixLink(topCtx.m, L0);
-      load(caseExpr);
+      ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, caseExpr.a);
       dflt := ClassFormat.subtractCurrentLocationTo(topCtx.m, dflt);
       i := 0; j := 0;
       WHILE j < n DO
@@ -1948,7 +1954,8 @@ MODULE OJG;
         END ;
         INC(j)
       END ;
-      ClassFormat.putTableSwitchInsn(topCtx.m, tab[0].low, max, dflt, all);
+      ClassFormat.putTableSwitchInsn(topCtx.m, tab[0].low, max,
+                                     dflt, nLables, all);
       ClassFormat.FixLink(topCtx.m, end)
     ELSE OJS.Mark("too many cases or no case in case statement")
     END

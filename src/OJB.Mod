@@ -95,23 +95,23 @@ MODULE OJB;
     RETURN anon
   END generateAnonymousTypeObj;
 
-  PROCEDURE thisObj*(): Object;
+  PROCEDURE thisObj*(name: ARRAY OF CHAR): Object;
     VAR s, x: Object;
   BEGIN s := topScope;
     REPEAT x := s.next;
-      WHILE (x # NIL) & (x.name # OJS.id) DO x := x.next END ;
+      WHILE (x # NIL) & (x.name # name) DO x := x.next END ;
       s := s.dsc
     UNTIL (x # NIL) OR (s = NIL);
     RETURN x
   END thisObj;
 
-  PROCEDURE thisimport*(mod: Object): Object;
+  PROCEDURE thisimport*(mod: Object; name: ARRAY OF CHAR): Object;
     VAR obj: Object;
   BEGIN
     IF mod.rdo THEN
       IF mod.name[0] # 0X THEN
         obj := mod.dsc;
-        WHILE (obj # NIL) & (obj.name # OJS.id) DO obj := obj.next END
+        WHILE (obj # NIL) & (obj.name # name) DO obj := obj.next END
       ELSE obj := NIL
       END
     ELSE obj := NIL
@@ -125,6 +125,18 @@ MODULE OJB;
     WHILE (fld # NIL) & (fld.name # OJS.id) DO fld := fld.next END ;
     RETURN fld
   END thisfield;
+
+  PROCEDURE FindObj*(modid, modName, name: ARRAY OF CHAR): Object;
+    VAR obj: Object;
+  BEGIN
+    IF modid # modName THEN
+      obj := thisObj(modName);
+      obj := thisimport(obj, name)
+    ELSE
+      obj := thisObj(name)
+    END
+    RETURN obj
+  END FindObj;
 
   PROCEDURE OpenScope*;
     VAR s: Object;
