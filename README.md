@@ -3,7 +3,7 @@
 
 `oberonc` is a single pass, self-hosting compiler for the
 [Oberon-07](https://en.wikipedia.org/wiki/Oberon_(programming_language))
-programming language. It targets the Java Virtual Machine (version >=1.5).
+programming language. It targets the Java Virtual Machine (version >= 1.8).
 
 This project was started to showcase Niklaus Wirth's approach to writing
 compilers (see
