@@ -8,7 +8,7 @@ programming language. It targets the Java Virtual Machine (version >= 1.8).
 This project was started to showcase Niklaus Wirth's approach to writing
 compilers (see
 ["Compiler Construction -
-The Art of Niklaus Wirth"](http://www.oberon2005.oberoncore.ru/paper/art3.pdf)
+The Art of Niklaus Wirth"](https://pdfs.semanticscholar.org/3e12/6570cd6b0fc8f9d3c205f0347a055df5b670.pdf)
 by Hanspeter Mössenböck for more details).
 
 `oberonc` is inspired by Niklaus Wirth's compiler for a RISC processor available
