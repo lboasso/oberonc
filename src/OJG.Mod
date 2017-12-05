@@ -16,7 +16,7 @@ MODULE OJG;
   TYPE
     Item* = RECORD
       mode*: INTEGER;
-      type*, caseOrgType*: OJB.Type;
+      type*, oldType*: OJB.Type;
       a*, b*, r: INTEGER;
       rdo*: BOOLEAN;  (*read only*)
       name*: OJS.Ident;
@@ -51,7 +51,6 @@ MODULE OJG;
     relmapNil: ARRAY 2 OF INTEGER;  (*condition codes for relations with NIL*)
     relmapAdr: ARRAY 2 OF INTEGER;  (*condition codes for relations with adr*)
     str: ARRAY maxStrx OF CHAR;
-    TypeTest0: PROCEDURE (VAR x: Item; T: OJB.Type; isguard: BOOLEAN);
 
   PROCEDURE curStack*(): INTEGER;
     RETURN topCtx.m.curStack
@@ -826,8 +825,8 @@ MODULE OJG;
       s: ARRAY OJS.stringBufSize OF CHAR;
   BEGIN
     IF x.mode # Stack THEN
-      IF x.caseOrgType # NIL THEN
-        xt := x.caseOrgType
+      IF x.oldType # NIL THEN
+        xt := x.oldType
       ELSE
         xt := x.type
       END ;
@@ -864,7 +863,7 @@ MODULE OJG;
       ELSIF x.mode = RegI THEN
         pushTypedArray(xt)
       ELSIF x.mode = Field THEN
-        Descriptor(x.type, desc);
+        Descriptor(xt, desc);
         ClassFormat.putFieldInsn(topCtx.m, Opcodes.GETFIELD, x.recordName,
                                  x.name, desc)
       ELSIF x.mode = Cond THEN
@@ -880,9 +879,10 @@ MODULE OJG;
         Fixup(L1)
       END ;
       x.mode := Stack;
-      IF x.caseOrgType # NIL THEN
-        x.caseOrgType := NIL;
-        TypeTest0(x, x.type, TRUE)
+      IF x.oldType # NIL THEN
+        x.oldType := NIL;
+        internalName(x.type, desc);
+        ClassFormat.putTypeInsn(topCtx.m, Opcodes.CHECKCAST, desc)
       END ;
       IF x.type = OJB.byteType THEN
         pushConst(255);
@@ -895,13 +895,13 @@ MODULE OJG;
     VAR iname: ClassFormat.Descriptor;
       op: INTEGER;
   BEGIN
-    op := Opcodes.INSTANCEOF;
-    load(x);
     IF isguard THEN
-      op := Opcodes.CHECKCAST
-    END ;
-    internalName(T, iname);
-    ClassFormat.putTypeInsn(topCtx.m, op, iname)
+      IF x.oldType = NIL THEN x.oldType := x.type END
+    ELSE
+      load(x);
+      internalName(T, iname);
+      ClassFormat.putTypeInsn(topCtx.m, Opcodes.INSTANCEOF, iname)
+    END
   END TypeTest;
 
   PROCEDURE loadCond(VAR x: Item);
@@ -975,7 +975,7 @@ MODULE OJG;
   BEGIN
     x.mode := y.class; x.type := y.type; x.a := y.val;  x.rdo := y.rdo;
     Strings.Copy(y.name, x.name);
-    x.caseOrgType := y.caseOrgType;
+    x.oldType := y.caseOrgType;
     IF y.class = OJB.Par THEN
       x.b := 0
     ELSIF (y.class = OJB.Const) & (y.type.form = OJB.String) THEN
@@ -1776,12 +1776,17 @@ MODULE OJG;
   PROCEDURE VarParam*(VAR x: Item);
     VAR desc:  ClassFormat.Descriptor;
       newStoreStmt: StoreStmt;
-      type: OJB.Type;
+      type, newType: OJB.Type;
   BEGIN
-    IF x.mode = OJB.Par THEN
-      (* x is already a var parameter so pass it by value *)
+    IF (x.mode = OJB.Par) & (x.oldType = NIL) THEN
+      (* x is already a var parameter with no type guard, so pass it by value *)
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, x.a)
     ELSE
+      IF x.oldType # NIL THEN
+        newType := x.oldType
+      ELSE
+        newType := x.type
+      END ;
       NEW(newStoreStmt);
       IF x.mode = Field THEN
         newStoreStmt.x.a := topCtx.numTmpVars;
@@ -1789,7 +1794,7 @@ MODULE OJG;
         Strings.Copy(x.recordName, newStoreStmt.x.recordName);
         Strings.Copy(x.modName, newStoreStmt.x.modName);
         Strings.Copy(x.name, newStoreStmt.x.name);
-        newStoreStmt.x.type := x.type;
+        newStoreStmt.x.type := newType;
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ASTORE, newStoreStmt.x.a);
         INC(topCtx.numTmpVars)
       ELSIF x.mode = RegI THEN
@@ -1800,7 +1805,7 @@ MODULE OJG;
         newStoreStmt.x.mode := x.mode;
         Strings.Copy(x.name, newStoreStmt.x.name);
         Strings.Copy(x.modName, newStoreStmt.x.modName);
-        newStoreStmt.x.type := x.type;
+        newStoreStmt.x.type := newType;
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ISTORE, newStoreStmt.x.b);
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ASTORE, newStoreStmt.x.a)
       ELSE
@@ -1809,7 +1814,7 @@ MODULE OJG;
         newStoreStmt.x.mode := x.mode;
         Strings.Copy(x.name, newStoreStmt.x.name);
         Strings.Copy(x.modName, newStoreStmt.x.modName);
-        newStoreStmt.x.type := x.type
+        newStoreStmt.x.type := newType
       END ;
       ClassFormat.putInsn(topCtx.m, Opcodes.ICONST1);
       type := x.type;
@@ -1853,6 +1858,9 @@ MODULE OJG;
       ELSIF h.x.mode = RegI THEN
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, h.x.a);
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, h.x.b)
+      ELSIF h.x.mode = OJB.Par THEN
+        ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, h.x.a);
+        ClassFormat.putInsn(topCtx.m, Opcodes.ICONST0)
       END ;
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, h.y.a);
       ClassFormat.putInsn(topCtx.m, Opcodes.ICONST0);
@@ -2521,5 +2529,4 @@ BEGIN
   relmap0[4] := Opcodes.IFGT; relmap0[5] := Opcodes.IFGE;
   relmapNil[0] := Opcodes.IFNULL; relmapNil[1] := Opcodes.IFNONNULL;
   relmapAdr[0] := Opcodes.IFACMPEQ;relmapAdr[1] := Opcodes.IFACMPNE;
-  TypeTest0 := TypeTest;
 END OJG.

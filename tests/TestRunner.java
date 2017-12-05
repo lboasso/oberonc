@@ -29,7 +29,8 @@ public class TestRunner {
       "CaseRecord0", "CaseRecord1", "CaseRecord2", "TestTypeConvFun",
       "TestFor1", "Out1", "TestAssert", "CaseChar0", "Out6", "TestSystemVal",
       "TestNestedProcs", "Pattern1", "TestStringsMod", "OutTest",
-      "ProcVariables7", "RecordAssignment2", "RecordParam"
+      "ProcVariables7", "RecordAssignment2", "RecordParam", "CaseRecord3",
+      "VarParGuard"
     };
     successful[0] = 0;
     failed[0] = 0;

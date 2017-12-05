@@ -676,7 +676,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         typobj := qualident(modName);
         Strings.Copy(modName, x.modName);
         OJG.MakeItem(x, obj, level);
-        x.caseOrgType := NIL;
+        x.oldType := NIL;
         IF typobj.class # OJB.Typ THEN OJS.Mark("not a type") END ;
         TypeTest(x, typobj.type, FALSE); obj.caseOrgType := obj.type;
         obj.type := typobj.type;
