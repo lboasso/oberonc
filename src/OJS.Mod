@@ -40,7 +40,7 @@ MODULE OJS;
     to* = 50; by* = 51; semicolon* = 52; end* = 53; bar* = 54;
     else* = 55; elsif* = 56; until* = 57; return* = 58;
     array* = 60; record* = 61; pointer* = 62; const* = 63; type* = 64;
-    var* = 65; procedure* = 66; begin* = 67; import* = 68; module* = 69; 
+    var* = 65; procedure* = 66; begin* = 67; import* = 68; module* = 69;
     definition* = 70; eot* = 71;
 
   TYPE Ident* = ARRAY IdLen OF CHAR;
@@ -189,13 +189,13 @@ MODULE OJS;
   BEGIN i := 0; read;
     WHILE ~EOF & (ch # "$") DO
       WHILE ~EOF & (ch <= " ") DO read END ;  (*skip*)
-      IF ("0" <= ch) & (ch <= "9") THEN m := ORD(ch) - 30H
-      ELSIF ("A" <= ch) & (ch <= "F") THEN m := ORD(ch) - 37H
+      IF ("0" <= ch) & (ch <= "9") THEN m := ORD(ch) - ORD("0")
+      ELSIF ("A" <= ch) & (ch <= "F") THEN m := ORD(ch) - ORD("7")
       ELSE m := 0; Mark("hexdig expected")
       END ;
       read;
-      IF ("0" <= ch) & (ch <= "9") THEN n := ORD(ch) - 30H
-      ELSIF ("A" <= ch) & (ch <= "F") THEN n := ORD(ch) - 37H
+      IF ("0" <= ch) & (ch <= "9") THEN n := ORD(ch) - ORD("0")
+      ELSIF ("A" <= ch) & (ch <= "F") THEN n := ORD(ch) - ORD("7")
       ELSE n := 0; Mark("hexdig expected")
       END ;
       IF i < stringBufSize THEN
@@ -227,7 +227,7 @@ MODULE OJS;
   BEGIN ival := 0; i := 0; n := 0; k := 0;
     REPEAT
       IF n < 16 THEN
-         d[n] := ORD(ch)-30H; INC(n)
+         d[n] := ORD(ch)-ORD("0"); INC(n)
       ELSE
         Mark("too many digits"); n := 0
       END ;
@@ -235,7 +235,7 @@ MODULE OJS;
     UNTIL (ch < "0") OR (ch > "9") & (ch < "A") OR (ch > "F");
     IF (ch = "H") OR (ch = "R") OR (ch = "X") THEN  (*hex*)
       REPEAT h := d[i];
-        (* ex . ORD("A")-30H = 65-48 = 17 -> 17-7 = 10 *)
+        (* ex . ORD("A")-ORD("0") = 65-48 = 17 -> 17-7 = 10 *)
         IF h >= 10 THEN h := h-7 END ;
         k := k*10H + h; INC(i) (*no overflow check*)
       UNTIL i = n;
@@ -263,7 +263,7 @@ MODULE OJS;
       ELSE (*real number*) x := 0.0; e := 0;
         REPEAT  (*integer part*) x := x * 10.0 + FLT(d[i]); INC(i) UNTIL i = n;
         WHILE (ch >= "0") & (ch <= "9") DO  (*fraction*)
-          x := x * 10.0 + FLT(ORD(ch) - 30H); DEC(e); read
+          x := x * 10.0 + FLT(ORD(ch) - ORD("0")); DEC(e); read
         END ;
         IF (ch = "E") OR (ch = "D") THEN  (*scale factor*)
           read; s := 0;
@@ -272,7 +272,7 @@ MODULE OJS;
             IF ch = "+" THEN read END
           END ;
           IF (ch >= "0") & (ch <= "9") THEN
-            REPEAT s := s*10 + ORD(ch)-30H; read
+            REPEAT s := s*10 + ORD(ch)-ORD("0"); read
             UNTIL (ch < "0") OR (ch >"9");
             IF negE THEN e := e-s ELSE e := e+s END
           ELSE Mark("digit?")
@@ -376,7 +376,7 @@ MODULE OJS;
   PROCEDURE Init*(path: ARRAY OF CHAR);
     VAR f: Files.File;
       n, len: INTEGER;
-  BEGIN 
+  BEGIN
     pos := 0; line := 1; col := 0;
     EOF := FALSE; errpos := -1; errcnt := 0;
     Strings.Copy(path, inputPath);
@@ -398,7 +398,7 @@ MODULE OJS;
       Files.Close(f)
     END
   END Init;
-  
+
   PROCEDURE InitStr*(s: ARRAY OF BYTE);
   BEGIN
     pos := 0;
