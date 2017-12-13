@@ -18,7 +18,6 @@ MODULE ClassFormat;
     FieldsMax = CpMax;
     LineNumTabMax = CpMax;
     CodeMax = CpMax;
-    JumpsMax = CpMax;
     MethodsMax = 34 + LineNumTabMax + CodeMax;
     ClassMax = 32 + CpMax + MethodsMax + FieldsMax;
     ShortMaxValue = 32767;
@@ -52,11 +51,10 @@ MODULE ClassFormat;
       name: ARRAY OJS.IdLen OF CHAR;
       descriptor: ARRAY DescLenMax OF CHAR;
       code: ARRAY CodeMax OF BYTE;
-      i, pc: INTEGER;
+      i*: INTEGER;
       maxStack, curStack*, maxLocals: INTEGER;
       lineNumTab: ARRAY LineNumTabMax OF BYTE;
       lineIndex: INTEGER;
-      codeIndexFor: ARRAY JumpsMax OF INTEGER;
     END;
 
   VAR classMap: CpCache.Cache;
@@ -485,7 +483,6 @@ MODULE ClassFormat;
     mi.curStack := 0;
     mi.lineIndex := 0;
     mi.i := 0;
-    mi.pc := 1; (* since label 0 is used as a sentinel in FixLink *)
     IF CpCache.get(mi.cf.procMap, mi.name) = 1 THEN
       OJS.Mark("procedure names must be unique")
     ELSE
@@ -501,14 +498,6 @@ MODULE ClassFormat;
     END
   END setMaxStack;
 
-  PROCEDURE getPC*(mi: MethodInfo): INTEGER;
-    RETURN mi.pc
-  END getPC;
-
-  PROCEDURE subtractCurrentLocationTo*(mi: MethodInfo; L: INTEGER): INTEGER;
-    RETURN mi.codeIndexFor[L]-mi.i
-  END subtractCurrentLocationTo;
-
   PROCEDURE fix(mi: MethodInfo; at, with: INTEGER);
     VAR x: INTEGER;
   BEGIN
@@ -516,52 +505,39 @@ MODULE ClassFormat;
   END fix;
 
   PROCEDURE FixLink*(mi: MethodInfo; L: INTEGER);
-    VAR L1, j: INTEGER;
+    VAR L1: INTEGER;
   BEGIN
     WHILE (L # 0) & (OJS.errcnt = 0) DO
-      j := mi.codeIndexFor[L];
-      L1 := BOR(LSL(mi.code[j + 1], 8), mi.code[j + 2]);
-      fix(mi, j, mi.i-j);
+      L1 := BOR(LSL(mi.code[L + 1], 8), mi.code[L + 2]);
+      fix(mi, L, mi.i-L);
       L := L1
     END
   END FixLink;
 
   PROCEDURE FixLinkWith*(mi: MethodInfo; L0, dst: INTEGER);
-    VAR L1, j: INTEGER;
+    VAR L1: INTEGER;
   BEGIN
     WHILE (L0 # 0) & (OJS.errcnt = 0) DO
-      j := mi.codeIndexFor[L0];
-      L1 := BOR(LSL(mi.code[j + 1], 8), mi.code[j + 2]);
-      fix(mi, j, mi.codeIndexFor[dst]-j);
+      L1 := BOR(LSL(mi.code[L0 + 1], 8), mi.code[L0 + 2]);
+      fix(mi, L0, dst-L0);
       L0 := L1
     END
   END FixLinkWith;
 
   PROCEDURE merged*(mi: MethodInfo; L0, L1: INTEGER): INTEGER;
-    VAR L2, L3, j: INTEGER;
+    VAR L2, L3: INTEGER;
   BEGIN
     IF L0 # 0 THEN
       L3 := L0;
       REPEAT
         L2 := L3;
-        j := mi.codeIndexFor[L2];
-        L3 := BOR(LSL(mi.code[j + 1], 8), mi.code[j + 2]);
+        L3 := BOR(LSL(mi.code[L2 + 1], 8), mi.code[L2 + 2]);
       UNTIL L3 = 0;
-      fix(mi, j, L1);
+      fix(mi, L2, L1);
       L1 := L0
     END
     RETURN L1
   END merged;
-
-  PROCEDURE saveLocation(mi: MethodInfo);
-  BEGIN
-    IF mi.pc < JumpsMax THEN
-      mi.codeIndexFor[mi.pc] := mi.i
-    ELSE
-      OJS.Mark("maximum code length reached")
-    END;
-    INC(mi.pc)
-  END saveLocation;
 
   PROCEDURE putMethodInsn*(mi: MethodInfo; opcode: INTEGER;
                            owner, name, desc: ARRAY OF CHAR; args: INTEGER);
@@ -577,7 +553,6 @@ MODULE ClassFormat;
       INC(mi.curStack)
     END;
     setMaxStack(mi);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, opcode);
     mi.i := putShort(mi.code, mi.i, cpWriteMethodRef(mi.cf, owner, name, desc));
   END putMethodInsn;
@@ -640,7 +615,6 @@ MODULE ClassFormat;
   PROCEDURE putTypeInsn*(mi: MethodInfo; opcode: INTEGER; type: ARRAY OF CHAR);
   BEGIN
     incStack(mi, opcode);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, opcode);
     mi.i := putShort(mi.code, mi.i, cpWriteClass(mi.cf, type))
   END putTypeInsn;
@@ -650,7 +624,6 @@ MODULE ClassFormat;
   BEGIN
     mi.curStack := mi.curStack - (dims - 1);
     setMaxStack(mi);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, Opcodes.MULTIANEWARRAY);
     mi.i := putShort(mi.code, mi.i, cpWriteClass(mi.cf, desc));
     mi.i := putByte(mi.code, mi.i, dims)
@@ -661,7 +634,6 @@ MODULE ClassFormat;
     VAR j: INTEGER;
    BEGIN
     incStack(mi, Opcodes.TABLESWITCH);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, Opcodes.TABLESWITCH);
     mi.i := putNBytes(mi.code, mi.i, 0, (4 - mi.i MOD 4) MOD 4);
     mi.i := putInt(mi.code, mi.i, dflt);
@@ -675,7 +647,6 @@ MODULE ClassFormat;
   PROCEDURE putIincInsn*(mi: MethodInfo; var, increment: INTEGER);
   BEGIN
     incStack(mi, Opcodes.IINC);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, Opcodes.IINC);
     mi.i := putByte(mi.code, mi.i, var);
     mi.i := putByte(mi.code, mi.i, increment)
@@ -685,7 +656,6 @@ MODULE ClassFormat;
     VAR x: INTEGER;
   BEGIN
     incStack(mi, Opcodes.LDC);
-    saveLocation(mi);
     x := cpWriteConst(mi.cf, type, c);
     IF x <= 255 THEN
       mi.i := putByte(mi.code, mi.i, Opcodes.LDC);
@@ -700,7 +670,6 @@ MODULE ClassFormat;
     VAR x: INTEGER;
   BEGIN
     incStack(mi, Opcodes.LDC);
-    saveLocation(mi);
     x := cpWriteString(mi.cf, c, add0X);
     IF x <= 255 THEN
       mi.i := putByte(mi.code, mi.i, Opcodes.LDC);
@@ -715,7 +684,6 @@ MODULE ClassFormat;
     VAR opt: INTEGER;
   BEGIN
     incStack(mi, opcode);
-    saveLocation(mi);
     IF var < 4 THEN
       IF opcode < Opcodes.ISTORE THEN
         (* ILOAD_0 *)
@@ -735,7 +703,6 @@ MODULE ClassFormat;
                           owner, name, desc: ARRAY OF CHAR);
   BEGIN
     incStack(mi, opcode);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, opcode);
     mi.i := putShort(mi.code, mi.i, cpWriteFiledRef(mi.cf, owner, name, desc))
   END putFieldInsn;
@@ -743,7 +710,6 @@ MODULE ClassFormat;
   PROCEDURE putIntInsn*(mi: MethodInfo; opcode, operand: INTEGER);
   BEGIN
     incStack(mi, opcode);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, opcode);
     IF opcode = Opcodes.SIPUSH THEN
       mi.i := putByte(mi.code, mi.i, ASR(operand, 8));
@@ -756,7 +722,6 @@ MODULE ClassFormat;
   PROCEDURE putJumpInsn*(mi: MethodInfo; opcode, to: INTEGER);
   BEGIN
     incStack(mi, opcode);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, opcode);
     mi.i := putShort(mi.code, mi.i, to)
   END putJumpInsn;
@@ -764,7 +729,6 @@ MODULE ClassFormat;
   PROCEDURE putGotoInsn*(mi: MethodInfo; to, incr: INTEGER);
   BEGIN
     INC(mi.curStack, incr);
-    saveLocation(mi);
     IF to <= ShortMaxValue THEN
       mi.i := putByte(mi.code, mi.i, Opcodes.GOTO);
       mi.i := putShort(mi.code, mi.i, to)
@@ -777,7 +741,6 @@ MODULE ClassFormat;
   PROCEDURE putInsn*(mi: MethodInfo; opcode: INTEGER);
   BEGIN
     incStack(mi, opcode);
-    saveLocation(mi);
     mi.i := putByte(mi.code, mi.i, opcode)
   END putInsn;
 

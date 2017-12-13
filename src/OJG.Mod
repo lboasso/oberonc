@@ -523,15 +523,13 @@ MODULE OJG;
     IF type.form = OJB.Array THEN
       pushConst(type.len - 1);
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ISTORE, currTmpVar.val);
-      cond := ClassFormat.getPC(topCtx.m);
+      cond := topCtx.m.i;
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, currTmpVar.val);
-      end := ClassFormat.getPC(topCtx.m);
+      end := topCtx.m.i;
       ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFLT, 0);
       initializeMultiDimArray(i + 1, x, type.base, tmpVars, currTmpVar.next);
       ClassFormat.putIincInsn(topCtx.m, currTmpVar.val, -1);
-      ClassFormat.putGotoInsn(topCtx.m,
-                              ClassFormat.subtractCurrentLocationTo(topCtx.m,
-                                                                    cond), 0);
+      ClassFormat.putGotoInsn(topCtx.m, cond-topCtx.m.i, 0);
       Fixup(end)
     ELSE
       IF x.class = OJB.Fld THEN
@@ -867,11 +865,11 @@ MODULE OJG;
         ClassFormat.putFieldInsn(topCtx.m, Opcodes.GETFIELD, x.recordName,
                                  x.name, desc)
       ELSIF x.mode = Cond THEN
-        L0 := ClassFormat.getPC(topCtx.m);
+        L0 := topCtx.m.i;
         ClassFormat.putJumpInsn(topCtx.m, negated(x.r), 0);
         ClassFormat.FixLink(topCtx.m, x.b);
         ClassFormat.putInsn(topCtx.m, Opcodes.ICONST1);
-        L1 := ClassFormat.getPC(topCtx.m);
+        L1 := topCtx.m.i;
         ClassFormat.putGotoInsn(topCtx.m, 0, -1);
         ClassFormat.FixLink(topCtx.m, x.a);
         Fixup(L0);
@@ -913,36 +911,37 @@ MODULE OJG;
   END loadCond;
 
   PROCEDURE getPC*(): INTEGER;
-    RETURN ClassFormat.getPC(topCtx.m)
+    RETURN topCtx.m.i
   END getPC;
 
   PROCEDURE CFJump*(VAR x: Item);  (*conditional forward jump*)
+    VAR L0: INTEGER;
   BEGIN
     IF x.mode # Cond THEN loadCond(x) END ;
+    L0 := topCtx.m.i;
     ClassFormat.putJumpInsn(topCtx.m, negated(x.r), x.a);
-    ClassFormat.FixLink(topCtx.m, x.b); x.a := ClassFormat.getPC(topCtx.m)-1
+    ClassFormat.FixLink(topCtx.m, x.b); x.a := L0
   END CFJump;
 
   PROCEDURE FJump*(L: INTEGER): INTEGER;   (*unconditional forward jump*)
+    VAR L0: INTEGER;
   BEGIN
+    L0 := topCtx.m.i;
     ClassFormat.putGotoInsn(topCtx.m, L, 0);
-    L := ClassFormat.getPC(topCtx.m)-1
-    RETURN L
+    RETURN L0
   END FJump;
 
   PROCEDURE CBJump*(VAR x: Item; L: INTEGER);   (*conditional backward jump*)
   BEGIN
     IF x.mode # Cond THEN loadCond(x) END ;
-    ClassFormat.putJumpInsn(topCtx.m, negated(x.r),
-                            ClassFormat.subtractCurrentLocationTo(topCtx.m, L));
+    ClassFormat.putJumpInsn(topCtx.m, negated(x.r), L-topCtx.m.i);
     ClassFormat.FixLink(topCtx.m, x.b);
     ClassFormat.FixLinkWith(topCtx.m, x.a, L)
   END CBJump;
 
   PROCEDURE BJump*(L: INTEGER);   (*unconditional backward jump*)
   BEGIN
-    ClassFormat.putGotoInsn(topCtx.m,
-                          ClassFormat.subtractCurrentLocationTo(topCtx.m, L), 0)
+    ClassFormat.putGotoInsn(topCtx.m, L-topCtx.m.i, 0)
   END BJump;
 
   PROCEDURE genSignature*(type: OJB.Type);
@@ -1018,10 +1017,12 @@ MODULE OJG;
   END Not;
 
   PROCEDURE And1*(VAR x: Item);   (* x := x & *)
+    VAR L0: INTEGER;
   BEGIN
     IF x.mode # Cond THEN loadCond(x) END ;
+    L0 := topCtx.m.i;
     ClassFormat.putJumpInsn(topCtx.m, negated(x.r), x.a);
-    x.a := ClassFormat.getPC(topCtx.m)-1; ClassFormat.FixLink(topCtx.m, x.b);
+    x.a := L0; ClassFormat.FixLink(topCtx.m, x.b);
     x.b := 0
   END And1;
 
@@ -1032,10 +1033,12 @@ MODULE OJG;
   END And2;
 
   PROCEDURE Or1*(VAR x: Item);   (* x := x OR *)
+    VAR L0: INTEGER;
   BEGIN
     IF x.mode # Cond THEN loadCond(x) END ;
+    L0 := topCtx.m.i;
     ClassFormat.putJumpInsn(topCtx.m, x.r, x.b);
-    x.b := ClassFormat.getPC(topCtx.m)-1; ClassFormat.FixLink(topCtx.m, x.a);
+    x.b := L0; ClassFormat.FixLink(topCtx.m, x.a);
     x.a := 0
   END Or1;
 
@@ -1221,7 +1224,7 @@ MODULE OJG;
     VAR L: INTEGER;
   BEGIN
     ClassFormat.putInsn(topCtx.m, Opcodes.DUP);
-    L := ClassFormat.getPC(topCtx.m);
+    L := topCtx.m.i;
     ClassFormat.putJumpInsn(topCtx.m, negated(cond), 0);
     Trap(msg);
     Fixup(L)
@@ -1628,15 +1631,13 @@ MODULE OJG;
       (* topCtx.numTmpVars is the first free local to use *)
       index := i + topCtx.numTmpVars;
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ISTORE, index);
-      cond := ClassFormat.getPC(topCtx.m);
+      cond := topCtx.m.i;
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, index);
-      end := ClassFormat.getPC(topCtx.m);
+      end := topCtx.m.i;
       ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFLT, 0);
       storeArrayR(i + 1, type.base, x, y);
       ClassFormat.putIincInsn(topCtx.m, index, -1);
-      ClassFormat.putGotoInsn(topCtx.m,
-                              ClassFormat.subtractCurrentLocationTo(topCtx.m,
-                                                                    cond), 0);
+      ClassFormat.putGotoInsn(topCtx.m, cond-topCtx.m.i, 0);
       Fixup(end)
     ELSE
       (* as we incremented index(= last used local) we have to
@@ -1689,7 +1690,7 @@ MODULE OJG;
       pushConst(x.type.len);
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, y.a);
       ClassFormat.putInsn(topCtx.m, Opcodes.ARRAYLENGTH);
-      end := ClassFormat.getPC(topCtx.m);
+      end := topCtx.m.i;
       ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFICMPGE, 0);
       Trap("array copy overflow");
       Fixup(end)
@@ -1743,7 +1744,7 @@ MODULE OJG;
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, x.a);
       ClassFormat.putInsn(topCtx.m, Opcodes.ARRAYLENGTH);
       pushConst(y.b);
-      end := ClassFormat.getPC(topCtx.m);
+      end := topCtx.m.i;
       ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFICMPGE, 0);
       Trap("string too long");
       Fixup(end)
@@ -1893,7 +1894,7 @@ MODULE OJG;
     oldMode := x.mode;
     load(x);
     x.mode := oldMode;
-    L := ClassFormat.getPC(topCtx.m);
+    L := topCtx.m.i;
     IF w.a < 0 THEN ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFICMPGT, 0)
     ELSIF w.a > 0 THEN ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFICMPLT, 0)
     ELSE OJS.Mark("zero increment")
@@ -1927,7 +1928,7 @@ MODULE OJG;
   PROCEDURE CaseDefault*(): INTEGER;
     VAR dflt: INTEGER;
   BEGIN
-    dflt := getPC();
+    dflt := topCtx.m.i;
     Trap("Invalid case in CASE statement")
     RETURN dflt
   END CaseDefault;
@@ -1947,7 +1948,7 @@ MODULE OJG;
     IF nLables < NofCases THEN
       ClassFormat.FixLink(topCtx.m, L0);
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, caseExpr.a);
-      dflt := ClassFormat.subtractCurrentLocationTo(topCtx.m, dflt);
+      dflt := dflt-topCtx.m.i;
       i := 0; j := 0;
       WHILE j < n DO
         WHILE lastLow < tab[j].low DO
@@ -1956,7 +1957,7 @@ MODULE OJG;
           INC(lastLow)
         END ;
         WHILE lastLow <= tab[j].high DO
-          all[i] := ClassFormat.subtractCurrentLocationTo(topCtx.m, tab[j].L);
+          all[i] := tab[j].L-topCtx.m.i;
           INC(i);
           INC(lastLow)
         END ;
@@ -2090,10 +2091,12 @@ MODULE OJG;
   END Include;
 
   PROCEDURE Assert*(VAR x: Item);
+    VAR L0: INTEGER;
   BEGIN
     IF x.mode # Cond THEN loadCond(x) END ;
+    L0 := topCtx.m.i;
     ClassFormat.putJumpInsn(topCtx.m, x.r, x.b);
-    ClassFormat.FixLink(topCtx.m, x.a); x.b := ClassFormat.getPC(topCtx.m)-1;
+    ClassFormat.FixLink(topCtx.m, x.a); x.b := L0;
     Trap("assertion violated");
     ClassFormat.FixLink(topCtx.m, x.b)
   END Assert;
@@ -2174,7 +2177,7 @@ MODULE OJG;
         ClassFormat.putInsn(topCtx.m, Opcodes.DUP);
         ClassFormat.putInsn(topCtx.m, Opcodes.FCONST0);
         ClassFormat.putInsn(topCtx.m, Opcodes.FCMPG);
-        end := ClassFormat.getPC(topCtx.m);
+        end := topCtx.m.i;
         ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFGT, 0);
         ClassFormat.putInsn(topCtx.m, Opcodes.FCONST0);
         ClassFormat.putInsn(topCtx.m, Opcodes.SWAP);
@@ -2182,7 +2185,7 @@ MODULE OJG;
         Fixup(end)
       ELSE
         ClassFormat.putInsn(topCtx.m, Opcodes.DUP);
-        end := ClassFormat.getPC(topCtx.m);
+        end := topCtx.m.i;
         ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFGE, 0);
         ClassFormat.putInsn(topCtx.m, Opcodes.INEG);
         Fixup(end)
@@ -2356,15 +2359,13 @@ MODULE OJG;
     IF type.form = OJB.Array THEN
       pushConst(type.len - 1);
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ISTORE, currTmpVar.val);
-      cond := ClassFormat.getPC(topCtx.m);
+      cond := topCtx.m.i;
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, currTmpVar.val);
-      end := ClassFormat.getPC(topCtx.m);
+      end := topCtx.m.i;
       ClassFormat.putJumpInsn(topCtx.m, Opcodes.IFLT, 0);
       copyArrayR(i + 1, x, type.base, tmpVars, currTmpVar.next);
       ClassFormat.putIincInsn(topCtx.m, currTmpVar.val, -1);
-      ClassFormat.putGotoInsn(topCtx.m,
-                              ClassFormat.subtractCurrentLocationTo(topCtx.m,
-                                                                    cond), 0);
+      ClassFormat.putGotoInsn(topCtx.m, cond-topCtx.m.i, 0);
       Fixup(end)
     ELSE
       IF ~isPrimitiveType(type) & (type.form # OJB.Pointer) &
