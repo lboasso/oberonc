@@ -25,6 +25,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     expression: PROCEDURE (VAR x: OJG.Item);  (*to avoid forward reference*)
     Type: PROCEDURE (typedef: BOOLEAN): OJB.Type;
     FormalType: PROCEDURE (): OJB.Type;
+    EqualSignatures: PROCEDURE (t0, t1: OJB.Type): BOOLEAN;
     modid: OJS.Ident;
     pbsList: PtrBase;   (*list of names of pointer base types*)
     dummy: OJB.Object;
@@ -215,35 +216,37 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     END
   END selector;
 
-  (* Type Rule I.1, I.2, I.4 *)
-  PROCEDURE SameArrays(t0, t1: OJB.Type): BOOLEAN;
+  (* Type Rule A, B *)
+  PROCEDURE EqualTypes(t0, t1: OJB.Type): BOOLEAN;
   BEGIN
     RETURN (t0 = t1)
            OR (t0.form = OJB.Array) & (t1.form = OJB.Array) &
-              (t0.len = t1.len) & SameArrays(t0.base, t1.base)
-  END SameArrays;
+              (t0.len = t1.len) & EqualTypes(t0.base, t1.base)
+           OR (t0.form = OJB.Proc) & (t1.form = OJB.Proc) &
+              EqualSignatures(t0, t1)
+           OR (t0.form = OJB.Pointer) & (t1.form = OJB.Pointer) &
+              EqualTypes(t0.base, t1.base)
+  END EqualTypes;
 
-  (* Type Rule D.1, D.2 *)
+
+  (* Type Rule F.1, F.2 *)
   PROCEDURE CompatibleOpenArrays(t0, t1: OJB.Type): BOOLEAN;
   BEGIN
-    RETURN (t0 = t1)
+    RETURN EqualTypes(t0, t1)
            OR (t0.form = OJB.Array) & (t1.form = OJB.Array) & (t1.len < 0) &
               CompatibleOpenArrays(t0.base, t1.base)
   END CompatibleOpenArrays;
 
-  PROCEDURE EqualSignatures(t0, t1: OJB.Type): BOOLEAN;
+  PROCEDURE EqualSignatures0(t0, t1: OJB.Type): BOOLEAN;
     VAR p0, p1: OJB.Object; com: BOOLEAN;
   BEGIN com := TRUE;
-    (* Type Rule B.1, B.2 *)
-    IF (t0.base = t1.base) & (t0.nofpar = t1.nofpar) THEN
+    (* Type Rule C.1, C.2 *)
+    IF (t0.nofpar = t1.nofpar) & EqualTypes(t0.base, t1.base) THEN
       p0 := t0.dsc; p1 := t1.dsc;
       WHILE p0 # NIL DO
-        (* Type Rule A.1, A.2, A.3, B.3, B.4, I.1, I.2, I.3, I.4 *)
+        (* Type Rule C.3, C.4 *)
         IF (p0.class = p1.class) & (p0.rdo = p1.rdo) &
-             ((p0.type = p1.type) OR
-               SameArrays(p0.type, p1.type) OR (* include same open arrays *)
-               (p0.type.form = OJB.Proc) & (p1.type.form = OJB.Proc) &
-               EqualSignatures(p0.type, p1.type))
+           EqualTypes(p0.type, p1.type)
         THEN p0 := p0.next; p1 := p1.next
         ELSE p0 := NIL; com := FALSE
         END
@@ -251,21 +254,18 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     ELSE com := FALSE
     END ;
     RETURN com
-  END EqualSignatures;
+  END EqualSignatures0;
 
   PROCEDURE CompTypes(t0, t1: OJB.Type; varpar: BOOLEAN): BOOLEAN;
   BEGIN (*check for assignment compatibility*)
-    (* Type Rule I, C.1, C.2, C.3, C.4, C.7 *)
-           (* exclude a, b : ARRAY OF T *)
-    RETURN (t0 = t1) & ~((t0.form = OJB.Array) & (t0.len < 0))
-         (* exclude a : ARRAY OF T; b : ARRAY OF T *)
-      OR (t0.len > 0) & SameArrays(t0, t1)
+    (* Type Rule E.1, E.2, E.3, E.4 *)
+    RETURN ~((t0.form = OJB.Array) & (t1.form = OJB.Array) & (t0.len < 0) &
+             (t1.len < 0)) & EqualTypes(t0, t1)
       OR (t0.form = OJB.Record) & (t1.form = OJB.Record) & IsExtension(t0, t1)
       OR ~varpar &
         ((t0.form = OJB.Pointer) & (t1.form = OJB.Pointer) &
           IsExtension(t0.base, t1.base)
-          OR (t0.form = OJB.Proc) & (t1.form = OJB.Proc) & EqualSignatures(t0, t1)
-          OR (t0.form IN {OJB.Pointer, OJB.Proc}) & (t1.form = OJB.NilTyp))
+        OR (t0.form IN {OJB.Pointer, OJB.Proc}) & (t1.form = OJB.NilTyp))
   END CompTypes;
 
   PROCEDURE Parameter(par: OJB.Object);
@@ -274,8 +274,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     expression(x);
     IF par # NIL THEN
       varpar := (par.class = OJB.Par) OR (par.class = OJB.ParStruct);
-      IF CompTypes(par.type, x.type, varpar) OR       (* Type Rule C, E, F *)
-         CompatibleOpenArrays(x.type, par.type) THEN (* Type Rule G, D.1, D.2 *)
+      IF CompTypes(par.type, x.type, varpar) OR    (* Type Rule G.1, G.2, G.3 *)
+         CompatibleOpenArrays(x.type, par.type) THEN (* Type Rule F.1, F.2 *)
         IF varpar & x.rdo THEN OJS.Mark("read only actual parameter")
         ELSIF ~varpar OR (par.class = OJB.ParStruct) THEN
           IF x.mode = OJB.Typ THEN OJS.Mark("illegal value parameter") END ;
@@ -284,11 +284,11 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           IF ~par.rdo THEN CheckReadOnly(x) END ;
           OJG.VarParam(x)
         END
-      (* Type Rule D.3 *)
+      (* Type Rule F.3  *)
       ELSIF (x.type.form = OJB.String) & par.rdo & (par.type.form = OJB.Array) &
             (par.type.base.form = OJB.Char) & (par.type.len < 0) THEN
         OJG.StringParam(x)
-      (* Type Rule L *)
+      (* Type Rule F.3, J *)
       ELSIF (x.type.form = OJB.Char) & x.rdo & par.rdo &
             (par.type.form = OJB.Array) & (par.type.base.form = OJB.Char) &
             (par.type.len < 0) THEN
@@ -299,10 +299,11 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
            PROCEDURE P(VAR n: INTEGER);  ...  n := ...    uses a STR instruction
            P(b)     STR overwrites bytes around byte variable b
       *)
-      (* Type Rule K *) (*BYTE*)
+      (* Type Rule I, G.2 *) (*BYTE*)
       ELSIF ~varpar & (par.type.form = OJB.Int) & (x.type.form = OJB.Int) THEN
+        CheckByteRange(x);
         OJG.ValueParam(x)
-      (* Type Rule L *)
+      (* Type Rule J, G.2 *)
       ELSIF (x.type.form = OJB.String) & (x.b = 2) & (par.class = OJB.Var) &
             (par.type.form = OJB.Char) THEN
         OJG.StrToChar(x);
@@ -796,7 +797,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
             expression(y);
             IF y.mode = OJB.Typ THEN
               OJS.Mark("illegal assignment")
-            (* Type Rule I, C.1, C.2, C.3, C.4, C.7 *)
+            (* Type Rule E.1, E.2, E.3, E.4 *)
             ELSIF CompTypes(x.type, y.type, FALSE) THEN
               IF x.type.form <= OJB.Pointer THEN OJG.Store(x, y, FALSE)
               ELSIF x.type.form = OJB.Proc THEN OJG.StoreProc(x, y)
@@ -805,25 +806,25 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
               ELSIF y.type.form = OJB.Array THEN
                 OJG.storeArray1(x, y)
               END
-            (* Type Rule C.6 *)
+            (* Type Rule E.6 *)
             ELSIF (x.type.form = OJB.Array) & (y.type.form = OJB.Array) &
                   (x.type.len > 0) & (y.type.len < 0) &
-                  SameArrays(x.type.base, y.type.base) THEN
+                  EqualTypes(x.type.base, y.type.base) THEN
               OJG.storeArray1(x, y)
-            (* Type Rule C.5 *)
+            (* Type Rule E.5 *)
             ELSIF (x.type.form = OJB.Array) & (x.type.base.form = OJB.Char) &
                   (y.type.form = OJB.String) THEN
               OJG.CopyString(x, y)
-            (* Type Rule L *)
+            (* Type Rule E.5, J *)
             ELSIF (x.type.form = OJB.Array) & (x.type.base.form = OJB.Char) &
                   y.rdo & (y.type.form = OJB.Char) THEN
               OJG.CharToStr(y);
               OJG.CopyString(x, y);
-            (* Type Rule K *)  (*BYTE*)
+            (* Type Rule I *)  (*BYTE*)
             ELSIF (x.type.form = OJB.Int) & (y.type.form = OJB.Int) THEN
               CheckByteRange(y);
               OJG.Store(x, y, FALSE)
-            (* Type Rule L *)
+            (* Type Rule J *)
             ELSIF (x.type.form = OJB.Char) & (y.type.form = OJB.String) &
                   (y.b = 2) THEN
               OJG.StrToChar(y); OJG.Store(x, y, FALSE)
@@ -1069,7 +1070,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         OJS.Get(sym);
         IF sym = OJS.ident THEN
           obj := qualident(modName); ptype.base := obj.type;
-          (* Type Rule J *)
+          (* Type Rule H *)
           IF ~((obj.class = OJB.Typ) &
                (obj.type.form IN {OJB.Byte .. OJB.Pointer, OJB.Proc})) THEN
             OJS.Mark("illegal function type")
@@ -1293,14 +1294,14 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         IF sym = OJS.return THEN
           OJS.Get(sym); expression(x);
           IF type.base = OJB.noType THEN OJS.Mark("this is not a function")
-          (* Type Rule K *)
+          (* Type Rule I *)
           ELSIF (type.base.form = OJB.Int) & (x.type.form = OJB.Int) THEN
             CheckByteRange(x)
-          (* Type Rule L *)
+          (* Type Rule J *)
           ELSIF (type.base.form = OJB.Char) & (x.type.form = OJB.String) &
                 (x.b = 2) THEN
             OJG.StrToChar(x);
-          (* Type Rule J *)
+          (* Type Rule H *)
           ELSIF ~CompTypes(type.base, x.type, FALSE) THEN
             OJS.Mark("wrong result type")
           END
@@ -1399,5 +1400,6 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
 
 BEGIN
   NEW(dummy); dummy.class := OJB.Var; dummy.type := OJB.intType;
-  expression := expression0; Type := Type0; FormalType := FormalType0
+  expression := expression0; Type := Type0; FormalType := FormalType0;
+  EqualSignatures := EqualSignatures0
 END OJP.

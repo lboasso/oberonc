@@ -1617,9 +1617,11 @@ MODULE OJG;
         (*
           only monodimensional open arrays are supported.
           ex.
-            ARR = ARRAY 2 OF INTEGER
-            P(a : ARRAY OF ARR)
-          You cannot have ARRAY OF ARRAY OF INTEGER
+            PROCEDURE P(VAR b : ARRAY OF ARRAY OF INTEGER);
+              VAR c: ARRAY 10, 10 OF INTEGER;
+            BEGIN
+              c := b; (* illegal see Type Rule E.6, B.2, B.3 *)
+            END P;
          *)
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ALOAD, y.a);
         ClassFormat.putInsn(topCtx.m, Opcodes.ARRAYLENGTH);
@@ -1683,8 +1685,8 @@ MODULE OJG;
     y.a := topCtx.numTmpVars;
     storeTypedLocal(y);
     INC(topCtx.numTmpVars);
-    (* OJP guarantees x and y are regular arrays (not open) with same element
-       types and length or x is a regular array, y is an open array with same
+    (* OJP guarantees x and y are regular arrays (not open) with equal element
+       types and length or x is a regular array, y is an open array with equal
        base type *)
     IF (check) & (y.type.len < 0) THEN (*open array len*)
       pushConst(x.type.len);
