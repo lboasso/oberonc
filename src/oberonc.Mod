@@ -9,7 +9,7 @@ IMPORT OJS, OJP, Out, Strings, Files;
 
   PROCEDURE Help;
   BEGIN
-    Out.String("Oberon-07 compiler v1.X"); Out.Ln;
+    Out.String("Oberon-07 compiler v1.1"); Out.Ln;
     Out.Ln;
     Out.String("Usage: oberonc outputFolder sourceFile1.Mod[+] sourceFile2.Mod[+] ..."); Out.Ln;
     Out.Ln;
