@@ -1157,9 +1157,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         END ;
         OJS.Get(sym)
       ELSE type.base := Type(FALSE);
-        IF (type.base.form # OJB.Record) OR (type.base.typobj = NIL) THEN
-          OJS.Mark("must point to named record")
-        END ;
+        IF type.base.form # OJB.Record THEN OJS.Mark("must point to record") END
       END
     ELSIF sym = OJS.procedure THEN
       OJS.Get(sym); OJB.OpenScope;
