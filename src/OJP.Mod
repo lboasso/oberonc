@@ -319,7 +319,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF sym # OJS.rparen THEN
       Parameter(par); n := 1;
       WHILE sym <= OJS.comma DO
-        Check(sym, "comma?");
+        Check(OJS.comma, "comma?");
         IF par # NIL THEN par := par.next END ;
         INC(n); Parameter(par)
       END ;
