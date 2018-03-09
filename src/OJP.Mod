@@ -613,51 +613,62 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   (* statements *)
 
   PROCEDURE StandProc(pno: INTEGER);
-    VAR nap, npar: INTEGER; (*nof actual/formal parameters*)
+    VAR npar: INTEGER; (*nof formal parameters*)
       x, y, z: OJG.Item;
   BEGIN
-    IF pno = 17 THEN
+    npar := pno MOD 10; pno := pno DIV 10;
+    IF (npar = 0) & (pno = 17) THEN
       OJG.WriteLn
-    ELSE
+    ELSIF (npar = 2) & (pno = 24) THEN (*ARGS*)
+      OJG.Args0();
       Check(OJS.lparen, "no (");
-      npar := pno MOD 10; pno := pno DIV 10; expression(x); nap := 1;
+      expression(x); CheckInt(x); OJG.Args1(x);
+      Check(OJS.comma, "no ,");
+      expression(y);
+      Check(OJS.rparen, "no )");
+      IF (y.type.form # OJB.Array) OR (y.type.base # OJB.charType) THEN
+        OJS.Mark("not ARRAY OF CHAR")
+      END ;
+      OJG.Args2(y)
+    ELSIF (npar = 2) & ((pno = 2) OR (pno = 3)) THEN (*INCL, EXCL*)
+      Check(OJS.lparen, "no (");
+      expression(x); CheckSet(x); CheckReadOnly(x);
+      OJG.Include0(x, z);
+      Check(OJS.comma, "no ,");
+      expression(y);
+      Check(OJS.rparen, "no )");
+      CheckInt(y); OJG.Include1(pno-2, y, z)
+    ELSIF (pno = 0) OR (pno = 1) THEN (*INC, DEC*)
+      Check(OJS.lparen, "no (");
+      expression(x); CheckInt(x); CheckReadOnly(x);
+      OJG.Increment0(x, z);
       IF sym = OJS.comma THEN
-        OJS.Get(sym); expression(y); nap := 2; z.type := OJB.noType;
-        WHILE sym = OJS.comma DO OJS.Get(sym); expression(z); INC(nap) END
-      ELSE y.type := OJB.noType
+        OJS.Get(sym); expression(y); CheckInt(y)
+      ELSE
+        y.type := OJB.noType
       END ;
       Check(OJS.rparen, "no )");
-      IF (npar = nap) OR (pno IN {0, 1}) THEN
-        IF pno IN {0, 1} THEN (*INC, DEC*)
-          CheckInt(x); CheckReadOnly(x);
-          IF y.type # OJB.noType THEN CheckInt(y) END ;
-          OJG.Increment(pno, x, y)
-        ELSIF pno IN {2, 3} THEN (*INCL, EXCL*)
-          CheckSet(x); CheckReadOnly(x); CheckInt(y); OJG.Include(pno-2, x, y)
-        ELSIF pno = 4 THEN CheckBool(x); OJG.Assert(x)
-        ELSIF pno = 5 THEN(*NEW*) CheckReadOnly(x);
-           IF (x.type.form = OJB.Pointer) & (x.type.base.form = OJB.Record) THEN
-             OJG.New(x)
-           ELSE
-             OJS.Mark("not a pointer to record")
-           END
-        ELSIF pno = 15 THEN
-          IF (x.type.form = OJB.String) & (x.b = 2) THEN
-            OJG.StrToChar(x)
-          ELSIF x.type.form # OJB.Char THEN
-            OJS.Mark("not Char"); x.type := OJB.charType
-          END ;
-          OJG.WriteChar(x)
-        ELSIF pno = 16 THEN CheckInt(x); OJG.WriteInt(x)
-        ELSIF pno = 18 THEN CheckReal(x); OJG.WriteReal(x)
-        ELSIF pno = 24 THEN
-          CheckInt(x);
-          IF (y.type.form # OJB.Array) OR (y.type.base # OJB.charType) THEN
-             OJS.Mark("not ARRAY OF CHAR")
-          END ;
-          OJG.Args(x, y)
-        END
-      ELSE OJS.Mark("wrong nof parameters")
+      OJG.Increment1(pno, x, y, z)
+    ELSE
+      Check(OJS.lparen, "no (");
+      expression(x);
+      Check(OJS.rparen, "no )");
+      IF pno = 4 THEN CheckBool(x); OJG.Assert(x)
+      ELSIF pno = 5 THEN(*NEW*) CheckReadOnly(x);
+         IF (x.type.form = OJB.Pointer) & (x.type.base.form = OJB.Record) THEN
+           OJG.New(x)
+         ELSE
+           OJS.Mark("not a pointer to record")
+         END
+      ELSIF pno = 15 THEN
+        IF (x.type.form = OJB.String) & (x.b = 2) THEN
+          OJG.StrToChar(x)
+        ELSIF x.type.form # OJB.Char THEN
+          OJS.Mark("not Char"); x.type := OJB.charType
+        END ;
+        OJG.WriteChar(x)
+      ELSIF pno = 16 THEN CheckInt(x); OJG.WriteInt(x)
+      ELSIF pno = 18 THEN CheckReal(x); OJG.WriteReal(x)
       END
     END
   END StandProc;
@@ -804,13 +815,13 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
               ELSIF y.type.form = OJB.Record THEN
                   OJG.Store(x, y, TRUE)
               ELSIF y.type.form = OJB.Array THEN
-                OJG.storeArray1(x, y)
+                OJG.storeArray(x, y)
               END
             (* Type Rule E.6 *)
             ELSIF (x.type.form = OJB.Array) & (y.type.form = OJB.Array) &
                   (x.type.len > 0) & (y.type.len < 0) &
                   EqualTypes(x.type.base, y.type.base) THEN
-              OJG.storeArray1(x, y)
+              OJG.storeArray(x, y)
             (* Type Rule E.5 *)
             ELSIF (x.type.form = OJB.Array) & (x.type.base.form = OJB.Char) &
                   (y.type.form = OJB.String) THEN

@@ -1678,7 +1678,7 @@ MODULE OJG;
     INC(topCtx.numTmpVars)
   END storeTempLocal;
 
-  PROCEDURE storeArray1*(VAR x, y: Item);
+  PROCEDURE storeArray*(VAR x, y: Item);
     VAR end: INTEGER;
   BEGIN
     load(y);
@@ -1714,7 +1714,7 @@ MODULE OJG;
     ELSE
       storeArrayR(0, y.type, x, y)
     END
-  END storeArray1;
+  END storeArray;
 
   PROCEDURE StoreProc*(VAR x, y: Item);   (* x := y *)
   BEGIN
@@ -2023,22 +2023,30 @@ MODULE OJG;
     closeContext
   END Return;
 
-  PROCEDURE Increment*(upordown: INTEGER; VAR x, y: Item);
+  PROCEDURE Increment1*(upordown: INTEGER; VAR x, y, z: Item);
     VAR op: INTEGER;
-      tmp: Item;
   BEGIN
     IF upordown = 0 THEN op := Opcodes.IADD ELSE op := Opcodes.ISUB END ;
     IF y.type.form = OJB.NoTyp THEN y.mode := OJB.Const; y.a := 1 END ;
-    IF (x.mode = OJB.Var) & (x.r > 0) &
-       (x.type = OJB.intType) & (y.mode = OJB.Const) &
+    IF (x.mode = OJB.Var) & (x.r > 0) & (y.mode = OJB.Const) &
        (y.a >= -128) & (y.a <= 127) THEN
       IF op = Opcodes.ISUB THEN y.a := -y.a END ;
       ClassFormat.putIincInsn(topCtx.m, x.a, y.a)
     ELSE
-      IF (y.mode # OJB.Const) & (y.mode # OJB.Var) THEN
-        OJS.Mark("INC's second argument must be a constant or simple variable")
+      IF (x.mode = OJB.Var) & (x.r > 0) THEN
+        z := x;
+        load(x)
       END ;
-      tmp := x;
+      load(y);
+      ClassFormat.putInsn(topCtx.m, op);
+      Store(z, x, FALSE)
+    END
+  END Increment1;
+
+  PROCEDURE Increment0*(VAR x, z: Item);
+  BEGIN
+    IF (x.mode # OJB.Var) OR (x.r = 0) THEN
+      z := x;
       IF x.mode = RegI THEN
         ClassFormat.putInsn(topCtx.m, Opcodes.DUP2)
       ELSIF x.mode = Field THEN
@@ -2053,19 +2061,12 @@ MODULE OJG;
       ELSE
         load(x)
       END ;
-      load(y);
-      ClassFormat.putInsn(topCtx.m, op);
-      Store(tmp, x, FALSE)
     END
-  END Increment;
+  END Increment0;
 
-  PROCEDURE Include*(inorex: INTEGER; VAR x, y: Item);
-    VAR tmp: Item;
+  PROCEDURE Include0*(VAR x, z: Item);
   BEGIN
-    IF (y.mode # OJB.Const) & (y.mode # OJB.Var) THEN
-      OJS.Mark("INCL/EXCL's second argument must be a constant or simple variable")
-    END ;
-    tmp := x;
+    z := x;
     IF x.mode = RegI THEN
       ClassFormat.putInsn(topCtx.m, Opcodes.DUP2)
     ELSIF x.mode = Field THEN
@@ -2080,6 +2081,10 @@ MODULE OJG;
     ELSE
       load(x)
     END ;
+  END Include0;
+
+  PROCEDURE Include1*(inorex: INTEGER; VAR y, z: Item);
+  BEGIN
     Singleton(y);
     load(y);
     IF inorex = 0 THEN
@@ -2089,8 +2094,8 @@ MODULE OJG;
       ClassFormat.putInsn(topCtx.m, Opcodes.IXOR);
       ClassFormat.putInsn(topCtx.m, Opcodes.IAND)
     END ;
-    Store(tmp, x, FALSE)
-  END Include;
+    Store(z, y, FALSE)
+  END Include1;
 
   PROCEDURE Assert*(VAR x: Item);
     VAR L0: INTEGER;
@@ -2155,15 +2160,23 @@ MODULE OJG;
                               "WriteLn", "()V", 0)
   END WriteLn;
 
-  PROCEDURE Args*(VAR x, y: Item);
+  PROCEDURE Args0*;
   BEGIN
     ClassFormat.putFieldInsn(topCtx.m, Opcodes.GETSTATIC, topCtx.className,
                              "args", "[Ljava/lang/String;");
-    load(x);
+  END Args0;
+
+  PROCEDURE Args1*(VAR x: Item);
+  BEGIN
+    load(x)
+  END Args1;
+
+  PROCEDURE Args2*(VAR y: Item);
+  BEGIN
     load(y);
     ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKESTATIC, "OberonRuntime",
                               "ARGS", "([Ljava/lang/String;I[C)V", 3)
-  END Args;
+  END Args2;
 
   PROCEDURE Abs*(VAR x: Item);
     VAR f: REAL; end: INTEGER;

@@ -515,7 +515,7 @@ BEGIN
   enter("ReadInt", SFunc, intType, 220);
   enter("WriteChar", SProc, noType, 151);
   enter("WriteInt", SProc, noType, 161);
-  enter("WriteLn", SProc, noType, 17);
+  enter("WriteLn", SProc, noType, 170);
   enter("WriteReal", SProc, noType, 181);
 
   topScope := NIL; OpenScope; topScope.next := system; universe := topScope;

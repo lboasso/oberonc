@@ -24,6 +24,8 @@ MODULE TestCmdLineArgs;
       buf2: ARRAY 2 OF CHAR;
       buf: ARRAY 10 OF CHAR;
       i: INTEGER;
+      r: RECORD a: INTEGER END;
+      g: ARRAY 2 OF RECORD buf: ARRAY 2 OF CHAR END;
   BEGIN 
     ARGS(1, buf0);
     Print(buf0);
@@ -33,6 +35,11 @@ MODULE TestCmdLineArgs;
     Print(buf);
     ARGS(1, buf2);
     Print(buf2);
+
+    r.a := 1;
+    ARGS(r.a, g[1+i].buf);
+    Print(buf2);
+
     P(buf);
     Print(buf);
     FOR i := 0 TO ARGNUM()-1 DO ARGS(i, buf); Print(buf) END
