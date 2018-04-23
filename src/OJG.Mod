@@ -970,7 +970,7 @@ MODULE OJG;
     ELSE OJS.Mark("too many strings") END
   END MakeStringItem;
 
-  PROCEDURE MakeItem*(VAR x: Item; y: OJB.Object; curlev: INTEGER);
+  PROCEDURE MakeItem*(VAR x: Item; y: OJB.Object);
   BEGIN
     x.mode := y.class; x.type := y.type; x.a := y.val;  x.rdo := y.rdo;
     Strings.Copy(y.name, x.name);
@@ -982,9 +982,6 @@ MODULE OJG;
     ELSE
       x.r := y.lev
     END ;
-    IF (y.lev > 0) & (y.lev # curlev) & (y.class # OJB.Const) THEN
-      OJS.Mark("level error, not accessible")
-    END
   END MakeItem;
 
   PROCEDURE FieldAccess*(VAR x: Item; y: OJB.Object);   (* x := x.y *)

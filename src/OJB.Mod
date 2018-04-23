@@ -100,6 +100,11 @@ MODULE OJB;
   BEGIN s := topScope;
     REPEAT x := s.next;
       WHILE (x # NIL) & (x.name # name) DO x := x.next END ;
+      IF (x # NIL) & (s # topScope) & (x.lev > 0) & (* no local or global *)
+          (x.class IN {Var, Par, ParStruct}) THEN
+        OJS.Mark("level error, not accessible");
+        x := NIL
+      END ;
       s := s.dsc
     UNTIL (x # NIL) OR (s = NIL);
     RETURN x

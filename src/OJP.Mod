@@ -449,7 +449,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       IF obj.class = OJB.SFunc THEN StandFunc(x, obj.val, obj.type)
       ELSE
         Strings.Copy(modName, x.modName);
-        OJG.MakeItem(x, obj, level); selector(x);
+        OJG.MakeItem(x, obj); selector(x);
         IF sym = OJS.lparen THEN
           OJS.Get(sym);
           IF (x.type.form = OJB.Proc) & (x.type.base.form # OJB.NoTyp) THEN
@@ -687,7 +687,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       IF sym = OJS.ident THEN
         typobj := qualident(modName);
         Strings.Copy(modName, x.modName);
-        OJG.MakeItem(x, obj, level);
+        OJG.MakeItem(x, obj);
         x.oldType := NIL;
         IF typobj.class # OJB.Typ THEN OJS.Mark("not a type") END ;
         TypeTest(x, typobj.type, FALSE); obj.caseOrgType := obj.type;
@@ -799,7 +799,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       IF sym = OJS.ident THEN
         obj := qualident(modName);
         Strings.Copy(modName, x.modName);
-        OJG.MakeItem(x, obj, level);
+        OJG.MakeItem(x, obj);
         IF x.mode = OJB.SProc THEN StandProc(obj.val)
         ELSE selector(x);
           IF sym = OJS.becomes THEN (*assignment*)
@@ -896,7 +896,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         IF sym = OJS.ident THEN
           obj := qualident(modName);
           Strings.Copy(modName, x.modName);
-          OJG.MakeItem(x, obj, level); CheckInt(x); CheckReadOnly(x);
+          OJG.MakeItem(x, obj); CheckInt(x); CheckReadOnly(x);
           IF sym = OJS.becomes THEN
             OJG.loadPar(x); OJS.Get(sym); expression(y); CheckInt(y);
             OJG.For0(x, y); L0 := OJG.getPC();
