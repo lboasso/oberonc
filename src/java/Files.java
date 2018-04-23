@@ -198,11 +198,8 @@ public class Files {
   sequence, which has its most significant bit clear. The remaining seven bits
   of each byte are payload, with the least significant seven bits of the
   quantity in the first byte, the next seven in the second byte and so on.
-  In the case of a signed LEB128 (sleb128), the most significant PAYLOAD bit of
+  In the case of a signed LEB128, the most significant PAYLOAD bit of
   the final byte in the sequence is sign-extended to produce the final value.
-  In the unsigned case (uleb128), any bits not explicitly represented are
-  interpreted as 0.
-
 
    With 7 bits I can store numbers in this range:
     -2^6 <= x <= 2^6-1
@@ -232,48 +229,20 @@ public class Files {
     }
   }
 
-  /*
-      example: read -908 = 11111111111111111111110001110100
-              back from 11110100 01111000
-
-       1 1110100
-       ^----------- always one so these bits represent an unsigned byte
-                    >= 128
-
-       remove the first one -> 1 1110100 - 0x80 =
-                               01110100 =
-                               0000 0000000 0000000 0000000 1110100
-       rotate to the right by 7 on a 32 bit range  ->
-                              11101000000000000000000000000000
-       the last byte 01111000 = 120 < 128
-       so now have to add it to the previous result and rotate again ->
-                              11101000000000000000000000000000 +
-                              00000000000000000000000001111000
-                            = 11101000000000000000000001111000
-                      ROR 7 = 11110001110100000000000000000000
-
-      now we have to do an arithmetic(to preserve the sign) shift
-       by 32-7-7 (= 18) ->
-                             11111111111111111111110001110100 = -908
-
-   */
   public static int ReadNum(Files_FileDesc file) {
     int n, y, b, x;
     x = 0;
     if(file.err == OK) {
-      n = 32;
+      n = 0;
       y = 0;
       b = read(file);
-      while(b >= 0x80 && file.err == OK) {
-        y = OberonRuntime.ROR(y + b - 0x80, 7);
-        n -= 7;
+      while(b >= 0x80) {
+        y += ((b - 0x80) << n);
+        n += 7;
         b = read(file);
       }
-      if(n <= 4) {
-        x = OberonRuntime.ROR(y + (b & 0xF), 4);
-      } else {
-        x = OberonRuntime.ASR(OberonRuntime.ROR(y + b, 7), n - 7);
-      }
+      b = (b & 0x3F) - (b & 0x40);
+      x = y + (b << n);
     }
     return x;
   }
