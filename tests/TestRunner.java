@@ -49,6 +49,8 @@ public class TestRunner {
           compileAndFail("UniqueTypeAndProcNames", 3, "must be unique"));
     check(tot, successful, failed,
           compileAndFail("ArrayConstantSize", 2, "not a valid length"));
+    check(tot, successful, failed,
+          compileAndFail("TestExprVarPar", 2, "Only variables allowed"));
     System.err.println("TOTAL: "  + tot[0]);
     System.err.println("SUCCESSFUL: " + successful[0]);
     System.err.println("FAILED: " + failed[0]);

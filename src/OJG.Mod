@@ -1808,13 +1808,14 @@ MODULE OJG;
         newStoreStmt.x.type := newType;
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ISTORE, newStoreStmt.x.b);
         ClassFormat.putVarInsn(topCtx.m, Opcodes.ASTORE, newStoreStmt.x.a)
-      ELSE
+      ELSIF (x.mode = OJB.Var) OR (x.oldType # NIL) THEN
         newStoreStmt.x.a := x.a;
         newStoreStmt.x.r := x.r;
         newStoreStmt.x.mode := x.mode;
         Strings.Copy(x.name, newStoreStmt.x.name);
         Strings.Copy(x.modName, newStoreStmt.x.modName);
         newStoreStmt.x.type := newType
+      ELSE OJS.Mark("Only variables allowed")
       END ;
       ClassFormat.putInsn(topCtx.m, Opcodes.ICONST1);
       type := x.type;
