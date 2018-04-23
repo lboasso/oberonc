@@ -36,7 +36,7 @@ DEFINITION Files;
   PROCEDURE ReadInt*(file: File): INTEGER;
   PROCEDURE ReadBytes*(file: File; VAR b: ARRAY OF BYTE; VAR n: INTEGER);
   PROCEDURE ReadAsciiStr*(file: File; VAR str: ARRAY OF CHAR);
-  PROCEDURE ReadStr*(file: File; VAR str: ARRAY OF CHAR);
+  PROCEDURE ReadStr*(file: File; VAR str: ARRAY OF CHAR): INTEGER;
 
   PROCEDURE Status*(file: File): INTEGER;
   PROCEDURE Rename*(from, to: ARRAY OF CHAR): INTEGER;

@@ -276,6 +276,7 @@ MODULE OJB;
       thismod: Object;
       modname: OJS.Ident;
       fname: ARRAY OJS.maxPath OF CHAR;
+      str: ARRAY OJS.stringBufSize OF CHAR;
       f: Files.File;
   BEGIN
     key := 0;
@@ -299,6 +300,9 @@ MODULE OJB;
           ELSIF class = Const THEN
             IF obj.type.form = Real THEN
               obj.val :=  Files.ReadInt(f)
+            ELSIF obj.type.form = String THEN
+              obj.lev := Files.ReadStr(f, str) + 1; (* length + 0X *)
+              obj.val := OJS.InsertStr(str, obj.lev)
             ELSE
               obj.val := Files.ReadNum(f)
             END
@@ -393,6 +397,7 @@ MODULE OJB;
     VAR x, sum, i, r, len, rename, oldkey: INTEGER;
       obj: Object;
       filename, tmpFile: ARRAY OJS.maxPath OF CHAR;
+      str: ARRAY OJS.stringBufSize OF CHAR;
       f: Files.File;
       found: BOOLEAN;
   BEGIN
@@ -411,7 +416,11 @@ MODULE OJB;
           (* no need to export recordType *)
           IF obj.class = Const THEN
             IF obj.type.form = Real THEN Files.WriteInt(f, obj.val)
-            ELSE Files.WriteNum(f, obj.val) END
+            ELSIF obj.type.form = String THEN
+              OJS.ExtractStr(obj.val, obj.lev, str); (* lev is a length *)
+              Files.WriteStr(f, str)
+            ELSE Files.WriteNum(f, obj.val)
+            END
           END
         END ;
         obj := obj.next;

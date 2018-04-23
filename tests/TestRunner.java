@@ -79,7 +79,8 @@ public class TestRunner {
       {"TestImport50", "TestImport51", "TestImport52", "TestImport53"},
       {"TestImport60", "TestImport61", "TestImport62"},
       {"TestImport70", "TestImport71"},
-      {"TestImport81", "TestImport82", "TestImport80"}
+      {"TestImport81", "TestImport82", "TestImport80"},
+      {"TestImport90", "TestImport91"}
     };
     for(String[] test : suite) {
       boolean res = true;

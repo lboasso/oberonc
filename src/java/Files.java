@@ -350,11 +350,11 @@ public class Files {
     }
   }
 
-  public static void ReadStr(Files_FileDesc file, char[] str) {
+  public static int ReadStr(Files_FileDesc file, char[] str) {
     int i, last;
     char ch;
+    i = 0;
     if(str.length > 0 && file.err == OK) {
-      i = 0;
       last = str.length - 1;
       ch = ReadChar(file);
       while(i < last && ch != '\0' && file.err == OK) {
@@ -364,6 +364,7 @@ public class Files {
       }
       str[i] = '\0';
     }
+    return i;
   }
 
   public static int Seek(Files_FileDesc file, int pos) {

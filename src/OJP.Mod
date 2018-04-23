@@ -469,7 +469,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     ELSIF sym = OJS.nil THEN
        OJS.Get(sym); OJG.MakeConstItem(x, OJB.nilType, 0)
     ELSIF sym = OJS.string THEN
-       OJG.MakeStringItem(x, OJS.slen); OJS.Get(sym)
+       OJG.MakeStringItem(x); OJS.Get(sym)
     ELSIF sym = OJS.lparen THEN
        OJS.Get(sym); expression(x); Check(OJS.rparen, "no )")
     ELSIF sym = OJS.lbrace THEN

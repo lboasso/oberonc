@@ -22,7 +22,8 @@ MODULE OJS;
     NKW = 34;  (*nof keywords*)
     maxKWX = 11; maxKWD = 11;
     maxExp = 38; minExp = -45;
-    stringBufSize* = 256; maxSrcSize = 200000;
+    stringBufSize* = 256; maxStrx = stringBufSize*500;
+    maxSrcSize = 200000;
     maxErrMsgSize = 100;
     maxPath* = 200;
 
@@ -45,10 +46,12 @@ MODULE OJS;
 
   TYPE Ident* = ARRAY IdLen OF CHAR;
 
-  VAR ival*, slen*: INTEGER;  (*results of Get*)
+  VAR ival*, strpos*: INTEGER;  (*results of Get*)
+    slen*: INTEGER; (*include terminal 0X*)
     rval*: REAL;
     id*: Ident;  (*for identifiers*)
-    str*: ARRAY stringBufSize OF CHAR;
+    strBuf: ARRAY maxStrx OF CHAR;
+    strx: INTEGER;
     errcnt*: INTEGER;
 
     ch: CHAR;  (*last character read*)
@@ -86,6 +89,49 @@ MODULE OJS;
   BEGIN
     MarkAppend(msg, "")
   END Mark;
+
+  PROCEDURE ExtractChar*(a: INTEGER): CHAR;
+    VAR c: CHAR;
+  BEGIN
+    IF a < maxStrx THEN c := strBuf[a] ELSE c := 0X END
+    RETURN c
+  END ExtractChar;
+
+  PROCEDURE InsertChar*(c: CHAR): INTEGER;
+    VAR idx: INTEGER;
+  BEGIN
+    idx := strx;
+    IF (strx + 1) < maxStrx THEN
+        strBuf[strx] := c;
+        strBuf[strx + 1] := 0X;
+        INC(strx, 2)
+    ELSE Mark("too many strings")
+    END
+    RETURN idx
+  END InsertChar;
+
+  PROCEDURE ExtractStr*(i, len: INTEGER; VAR out: ARRAY OF CHAR);
+    VAR j: INTEGER;
+  BEGIN
+    j := 0;
+    WHILE (j < len) & (i < maxStrx) & (j < LEN(out)) DO
+      out[j] := strBuf[i];
+      INC(i);
+      INC(j)
+    END
+  END ExtractStr;
+
+  PROCEDURE InsertStr*(in: ARRAY OF CHAR; len: INTEGER): INTEGER;
+    VAR i, idx: INTEGER;
+  BEGIN
+    i := 0;
+    idx := strx;
+    IF (strx + len - 1) < maxStrx THEN
+      WHILE len > 0 DO strBuf[strx] := in[i]; INC(strx); INC(i); DEC(len) END
+    ELSE Mark("too many strings")
+    END
+    RETURN idx
+  END InsertStr;
 
   PROCEDURE getUTF8(): BOOLEAN;
     VAR ok: BOOLEAN;
@@ -169,24 +215,26 @@ MODULE OJS;
   END Identifier;
 
   PROCEDURE String;
-    VAR i: INTEGER;
-  BEGIN i := 0; read;
+  BEGIN read;
+    strpos := strx;
     WHILE ~EOF & (ch # 22X) DO (* 22X = " *)
       IF ch >= " " THEN
-        IF i < stringBufSize-1 THEN
-          str[i] := ch; INC(i)
+        IF strx < maxStrx-1 THEN
+          strBuf[strx] := ch; INC(strx)
         ELSE
           Mark("string too long")
         END
       END ;
       read
     END ;
-    str[i] := 0X; INC(i); read; slen := i
+    IF strx < maxStrx THEN strBuf[strx] := 0X; INC(strx) END;
+    read; slen := strx-strpos
   END String;
 
   PROCEDURE HexString;
-    VAR i, m, n: INTEGER;
-  BEGIN i := 0; read;
+    VAR m, n: INTEGER;
+  BEGIN read;
+    strpos := strx;
     WHILE ~EOF & (ch # "$") DO
       WHILE ~EOF & (ch <= " ") DO read END ;  (*skip*)
       IF ("0" <= ch) & (ch <= "9") THEN m := ORD(ch) - ORD("0")
@@ -198,14 +246,14 @@ MODULE OJS;
       ELSIF ("A" <= ch) & (ch <= "F") THEN n := ORD(ch) - ORD("7")
       ELSE n := 0; Mark("hexdig expected")
       END ;
-      IF i < stringBufSize THEN
-        str[i] := CHR(m*10H + n); INC(i)
+      IF strx < maxStrx THEN
+        strBuf[strx] := CHR(m*10H + n); INC(strx)
       ELSE
         Mark("string too long")
       END ;
       read
     END ;
-    read; slen := i  (*no 0X appended!*)
+    read; slen := strx-strpos  (*no 0X appended*)
   END HexString;
 
   PROCEDURE Ten(e: INTEGER): REAL;
@@ -416,7 +464,7 @@ MODULE OJS;
   BEGIN keyTab[k].id := name; keyTab[k].sym := sym; INC(k)
   END EnterKW;
 
-BEGIN k := 0; KWX[0] := 0; KWX[1] := 0;
+BEGIN strx := 0; k := 0; KWX[0] := 0; KWX[1] := 0;
   EnterKW(if, "IF");
   EnterKW(do, "DO");
   EnterKW(of, "OF");

@@ -9,7 +9,7 @@ MODULE OJG;
   IMPORT SYSTEM, Files, Opcodes, Strings, ClassFormat, OJS, OJB;
 
   CONST NofCases* = 256;
-    MaxSetElement* = 32; maxStrx = OJS.stringBufSize*500;
+    MaxSetElement* = 32;
     ParamsMax* = 20;
     Stack = 10; RegI = 11; Cond = 12; Field = 13; (*internal item modes*)
 
@@ -43,14 +43,12 @@ MODULE OJG;
     END ;
 
   VAR
-    strx: INTEGER;
     check: BOOLEAN;  (*emit run-time checks*)
     topCtx: ClassContext;
     relmap: ARRAY 6 OF INTEGER;  (*condition codes for relations*)
     relmap0: ARRAY 6 OF INTEGER;  (*condition codes for relations with 0*)
     relmapNil: ARRAY 2 OF INTEGER;  (*condition codes for relations with NIL*)
     relmapAdr: ARRAY 2 OF INTEGER;  (*condition codes for relations with adr*)
-    str: ARRAY maxStrx OF CHAR;
 
   PROCEDURE curStack*(): INTEGER;
     RETURN topCtx.m.curStack
@@ -304,19 +302,6 @@ MODULE OJG;
       ClassFormat.putLdcInsnInt(topCtx.m, ClassFormat.FLOAT, a)
     END
   END pushRealConst;
-
-  PROCEDURE extractStr(VAR x: Item; VAR out: ARRAY OF CHAR);
-    VAR i, j: INTEGER;
-  BEGIN
-    i := x.a;
-    j := 0;
-    WHILE (j < x.b) & (i < maxStrx) & (j+1 < OJS.stringBufSize) DO
-      out[j] := str[i];
-      INC(i);
-      INC(j)
-    END ;
-    out[j] := 0X
-  END extractStr;
 
   PROCEDURE isPrimitiveType(type: OJB.Type): BOOLEAN;
     RETURN (type = OJB.boolType) OR
@@ -847,7 +832,7 @@ MODULE OJG;
         ELSIF xt = OJB.nilType THEN
           ClassFormat.putInsn(topCtx.m, Opcodes.ACONSTNULL);
         ELSIF xt = OJB.strType THEN
-          extractStr(x, s);
+          OJS.ExtractStr(x.a, x.b, s);
           ClassFormat.putLdcInsnStr(topCtx.m, s, TRUE)
         ELSIF xt.form = OJB.Proc THEN
           MakeProcInstance(x);
@@ -959,15 +944,10 @@ MODULE OJG;
     x.a := SYSTEM.VAL(INTEGER, val); x.rdo := TRUE
   END MakeRealItem;
 
- (*copies string from OJS-buffer to OJG-string array*)
-  PROCEDURE MakeStringItem*(VAR x: Item; len: INTEGER);
-    VAR i: INTEGER;
+  PROCEDURE MakeStringItem*(VAR x: Item);
   BEGIN
     x.mode := OJB.Const; x.type := OJB.strType;
-    x.a := strx; x.b := len; i := 0; x.rdo := TRUE;
-    IF (strx + len) < maxStrx THEN
-      WHILE len > 0 DO str[strx] := OJS.str[i]; INC(strx); INC(i); DEC(len) END
-    ELSE OJS.Mark("too many strings") END
+    x.a := OJS.strpos; x.b := OJS.slen; x.rdo := TRUE;
   END MakeStringItem;
 
   PROCEDURE MakeItem*(VAR x: Item; y: OJB.Object);
@@ -1502,22 +1482,15 @@ MODULE OJG;
 
   PROCEDURE StrToChar*(VAR x: Item);
   BEGIN
-    x.type := OJB.charType; DEC(strx, 2); x.a := ORD(str[x.a])
+    x.type := OJB.charType; x.a := ORD(OJS.ExtractChar(x.a))
   END StrToChar;
 
   PROCEDURE CharToStr*(VAR x: Item);
-    VAR len: INTEGER; c: CHAR;
+    VAR c: CHAR;
   BEGIN
-    len := 2;
     c := CHR(x.a);
-    x.mode := OJB.Const; x.type := OJB.strType; x.a := strx; x.b := len;
-    x.rdo := TRUE;
-    IF (strx + len) < maxStrx THEN
-      str[strx] := c;
-      str[strx + 1] := 0X;
-      INC(strx, 2)
-    ELSE OJS.Mark("too many strings")
-    END
+    x.mode := OJB.Const; x.type := OJB.strType; x.a := OJS.InsertChar(c);
+    x.b := 2; (* 1 char + 0X *) x.rdo := TRUE
   END CharToStr;
 
   PROCEDURE StringRelation*(op: INTEGER; VAR x, y: Item);    (* x := x < y *)
@@ -2313,7 +2286,7 @@ MODULE OJG;
     VAR ctx: ClassContext;
   BEGIN
     ClassFormat.Init;
-    strx := 0; check := TRUE;
+    check := TRUE;
     NEW(ctx);
     Strings.Copy(modid, ctx.className);
     topCtx := ctx;
@@ -2330,7 +2303,8 @@ MODULE OJG;
                          "args", "[Ljava/lang/String;");
     tmp := topScope;
     WHILE tmp # NIL DO
-      IF (tmp.class = OJB.Const) & (tmp.type.form # OJB.Proc) & tmp.expo THEN
+      IF tmp.expo & (tmp.class = OJB.Const) & (tmp.type.form # OJB.Proc) &
+         (tmp.type.form # OJB.String) THEN
         Descriptor(tmp.type, desc);
         ClassFormat.addConstField(topCtx.c, tmp.name, desc, tmp.val)
       ELSIF tmp.class = OJB.Var THEN
