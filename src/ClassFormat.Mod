@@ -14,7 +14,7 @@ MODULE ClassFormat;
 
   CONST
     CpMax = 10000H;
-    DescLenMax = 100;
+    DescLenMax = 500;
     FieldsMax = CpMax;
     LineNumTabMax = CpMax;
     CodeMax = CpMax;

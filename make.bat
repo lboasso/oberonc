@@ -6,6 +6,7 @@ set MOD_SOURCES=src/Out.Mod src/Os.Mod src/Files.Mod src/Strings.Mod src/OJS.Mod
 
 if "%~1"=="" goto build
 if "%~1"=="build" goto build
+if "%~1"=="bootstrap" goto bootstrap
 if "%~1"=="runFern" goto runFern
 if "%~1"=="test" goto test
 if "%~1"=="clean" goto clean
@@ -14,9 +15,16 @@ echo "%~1": invalid target
 goto end
 
 :build
+mkdir "out/"
+javac -d out %JAVA_SOURCES%
+java -cp %OBERON_BIN% oberonc out %MOD_SOURCES%
+echo build done
+goto end
+
+:bootstrap
 javac -d bin %JAVA_SOURCES%
 java -cp %OBERON_BIN% oberonc bin %MOD_SOURCES%
-echo build done
+echo bootstrap done
 goto end
 
 :runFern
@@ -33,6 +41,7 @@ java -cp %OBERON_BIN%;tests/out TestRunner
 goto end
 
 :clean
+rmdir out /s /q
 rmdir tests\out /s /q
 rmdir examples\fern\out /s /q
 

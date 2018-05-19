@@ -8,6 +8,11 @@ MOD_SOURCES = src/Out.Mod src/Os.Mod src/Files.Mod src/Strings.Mod src/OJS.Mod \
               src/OJG.Mod src/OJP.Mod src/oberonc.Mod
 
 build:
+	mkdir -p out/
+	javac -d out $(JAVA_SOURCES)
+	java -cp $(OBERON_BIN) oberonc out $(MOD_SOURCES)
+
+bootstrap:
 	javac -d bin $(JAVA_SOURCES)
 	java -cp $(OBERON_BIN) oberonc bin $(MOD_SOURCES)
 
@@ -37,4 +42,4 @@ test:
 
 
 clean:
-	rm -rf tests/out/ bootstrapOut/ examples/fern/out/
+	rm -rf out/ tests/out/ bootstrapOut/ examples/fern/out/
