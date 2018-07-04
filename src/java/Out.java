@@ -1,5 +1,18 @@
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+
 public final class Out {
+
   private Out() {}
+
+  static {
+    try {
+      System.setOut(new PrintStream(System.out, true, "UTF-8"));
+      System.setErr(new PrintStream(System.err, true, "UTF-8"));
+    } catch(UnsupportedEncodingException e) {
+      // keep defaults
+    }
+  }
 
   public static void Char(char ch) {
     System.out.print(ch);

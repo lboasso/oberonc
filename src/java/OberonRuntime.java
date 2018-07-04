@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Locale;
 
 public final class OberonRuntime {
 
@@ -21,7 +22,7 @@ public final class OberonRuntime {
     4. x * 2^n = x LSL n (logical shift left)
     5. x MOD 2^n = x and (2^n - 1)
 
-   */
+  */
   public static int DIV(int x, int y) {
     int q = x / y;
     int r = x % y;
@@ -47,44 +48,13 @@ public final class OberonRuntime {
     return r;
   }
 
-  /*
-    From the Java Language Specification:
-    only the five lowest-order bits
-    of the right-hand operand are used as the shift distance. It is as if the
-    right-hand  operand were subjected to a bitwise logical AND operator &
-    (§15.22.1) with the mask value 0x1f ( 0b11111 ). The shift distance
-    actually used is therefore always in the range 0 to 31, inclusive.
-  */
   public static int ASR(int x, int n) {
-    /*
-      From the Java Language Specification:
-      The value of n >> s is n right-shifted s bit positions with
-      sign-extension. The resulting value is floor(n / 2^s). For non-negative
-      values of n, this is equivalent to truncating integer division, as
-      computed by the integer division operator / , by two to the power s.
-    */
     return x >> n;
   }
 
 
   public static int ROR(int x, int n) {
-    // This is equivalent
-
-    //return (x >>> n) | (x << (31-n));
-    //return (x >>> n) | (x << (-n & 31));
-    /*
-       Like Integer.rotateRight()
-       Returns the value obtained by rotating the two's complement binary
-       representation of the specified int value right by the specified number
-       of bits. (Bits shifted out of the right hand, or low-order, side reenter
-       on the left, or high-order.)
-       Note that right rotation with a negative distance is equivalent to left
-       rotation: rotateRight(val, -distance) == rotateLeft(val, distance).
-       Note also that rotation by any multiple of 32 is a no-op, so all but the
-       last five bits of the rotation distance can be ignored, even if the
-       distance is negative:
-       rotateRight(val, distance) == rotateRight(val, distance & 0x1F).
-    */
+    // see Integer.rotateRight()
     return (x >>> n) | (x << -n);
   }
 
@@ -152,14 +122,14 @@ public final class OberonRuntime {
 
   public static void WriteInt(int num) {
     if(num <= 999 && num >= -99) {
-      System.out.printf("%4d", num);
+      System.out.printf(Locale.US, "%4d", num);
     } else {
-      System.out.printf(" %d", num);
+      System.out.printf(Locale.US, " %d", num);
     }
   }
 
   public static void WriteReal(float num) {
-    System.out.printf(" %f", num);
+    System.out.printf(Locale.US, " %f", num);
   }
 
   public static void WriteChar(int c) {

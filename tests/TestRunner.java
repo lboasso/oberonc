@@ -157,21 +157,6 @@ public class TestRunner {
     return res;
   }
 
-  private static boolean compile(String path) {
-    boolean res = true;
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(out);
-    System.setOut(ps);
-    OJP.Compile(path.toCharArray(), true, outFolder.toCharArray());
-    if(OJS.errcnt != 0) {
-      System.err.println("Compilation of " + path + " FAILED:");
-      System.err.println(out.toString());
-      System.err.println("---END---\n");
-      res = false;
-    }
-    return res;
-  }
-
   private static boolean compileAndRunWithInput(String name, String input) {
     return compileAndRunArgs(name, input, null);
   }

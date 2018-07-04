@@ -38,7 +38,7 @@ test:
 	rm -rf tests/out/
 	mkdir -p tests/out/
 	javac -cp $(OBERON_BIN) -d tests/out tests/TestRunner.java
-	java -cp $(OBERON_BIN):tests/out TestRunner
+	java -Dfile.encoding=UTF-8 -cp $(OBERON_BIN):tests/out TestRunner
 
 
 clean:
