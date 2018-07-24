@@ -301,7 +301,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       *)
       (* Type Rule I, G.2 *) (*BYTE*)
       ELSIF ~varpar & (par.type.form = OJB.Int) & (x.type.form = OJB.Int) THEN
-        CheckByteRange(x);
+        IF par.type = OJB.byteType THEN CheckByteRange(x) END;
         OJG.ValueParam(x)
       (* Type Rule J, G.2 *)
       ELSIF (x.type.form = OJB.String) & (x.b = 2) & (par.class = OJB.Var) &
@@ -833,7 +833,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
               OJG.CopyString(x, y);
             (* Type Rule I *)  (*BYTE*)
             ELSIF (x.type.form = OJB.Int) & (y.type.form = OJB.Int) THEN
-              CheckByteRange(y);
+              IF x.type = OJB.byteType THEN CheckByteRange(y) END;
               OJG.Store(x, y, FALSE)
             (* Type Rule J *)
             ELSIF (x.type.form = OJB.Char) & (y.type.form = OJB.String) &
@@ -1305,7 +1305,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           IF type.base = OJB.noType THEN OJS.Mark("this is not a function")
           (* Type Rule I *)
           ELSIF (type.base.form = OJB.Int) & (x.type.form = OJB.Int) THEN
-            CheckByteRange(x)
+            IF type.base = OJB.byteType THEN CheckByteRange(x) END
           (* Type Rule J *)
           ELSIF (type.base.form = OJB.Char) & (x.type.form = OJB.String) &
                 (x.b = 2) THEN
