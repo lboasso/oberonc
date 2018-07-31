@@ -442,7 +442,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF (sym < OJS.char) OR (sym > OJS.ident) THEN
       OJS.Mark("expression expected");
       REPEAT OJS.Get(sym)
-      UNTIL (sym >= OJS.char) & (sym <= OJS.ident) OR (sym = OJS.eot)
+      UNTIL (sym >= OJS.char) & (sym <= OJS.for) OR (sym >= OJS.then)
     END ;
     IF sym = OJS.ident THEN
       obj := qualident(modName);
@@ -790,10 +790,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   BEGIN
     (* StatSequence *)
     REPEAT (*sync*) obj := NIL;
-      IF ~((sym = OJS.ident) OR (sym >= OJS.if) & (sym <= OJS.for) OR
-           (sym >= OJS.semicolon)) THEN
+      IF ~((sym >= OJS.ident) & (sym <= OJS.for) OR (sym >= OJS.semicolon)) THEN
         OJS.Mark("statement expected");
-        REPEAT OJS.Get(sym) UNTIL (sym = OJS.ident) OR (sym >= OJS.if)
+        REPEAT OJS.Get(sym) UNTIL sym >= OJS.ident
       END ;
       OJG.SetLineNumber(OJS.GetLine());
       IF sym = OJS.ident THEN

@@ -42,7 +42,7 @@ MODULE OJS;
     else* = 55; elsif* = 56; until* = 57; return* = 58;
     array* = 60; record* = 61; pointer* = 62; const* = 63; type* = 64;
     var* = 65; procedure* = 66; begin* = 67; import* = 68; module* = 69;
-    definition* = 70; eot* = 71;
+    definition* = 70; eot = 71;
 
   TYPE Ident* = ARRAY IdLen OF CHAR;
 
