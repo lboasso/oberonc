@@ -68,6 +68,7 @@ public class TestRunner {
   }
 
   private static void testImports(int[] tot, int[] successful, int[] failed) {
+    boolean res, res0, res1;
     int i;
     // the compilation order matters
     String[][] suite = {
@@ -80,15 +81,25 @@ public class TestRunner {
       {"TestImport60", "TestImport61", "TestImport62"},
       {"TestImport70", "TestImport71"},
       {"TestImport81", "TestImport82", "TestImport80"},
-      {"TestImport90", "TestImport91"}
+      {"TestImport90", "TestImport91"},
+      {"TestImport100"},
+      {"TestImport120", "TestImport121", "TestImport122"},
+      {"TestImport130", "TestImport131"},
     };
+
     for(String[] test : suite) {
-      boolean res = true;
+      res = true;
       for(i = 0; i < test.length && res; i++) {
         res = compileAndRun(test[i]);
       }
       check(tot, successful, failed, res);
     }
+    res0 = compileAndRun("TestImport110");
+    OJP.Compile((suitePath + "TestImport111.Mod\0").toCharArray(), false,
+                outFolder.toCharArray());
+    res1 = OJS.errcnt == 0;
+    res = compileAndRun("TestImport112");
+    check(tot, successful, failed, res0 && res1 && res);
   }
 
   private static void testWithInputs(int[] tot, int[] successful,

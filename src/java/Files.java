@@ -257,43 +257,45 @@ public class Files {
 
   public static char ReadChar(Files_FileDesc file) {
     int b1, b2, b3;
-    char ch;
+    char ch = '\0';
     b1 = read(file);
-    switch (b1 >> 4) {
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:   // 1 bytes format: 0xxxxxxx
-        ch = (char) b1;
-        break;
+    if (file.err == OK) {
+      switch(b1 >> 4) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:   // 1 bytes format: 0xxxxxxx
+          ch = (char) b1;
+          break;
 
-      case 12:
-      case 13:  // 2 bytes format: 110xxxxx 10xxxxxx
-        b2 = read(file);
-        if (file.err == OK && (b2 & 0xC0) != 0x80) {
+        case 12:
+        case 13:  // 2 bytes format: 110xxxxx 10xxxxxx
+          b2 = read(file);
+          if(file.err == OK && (b2 & 0xC0) != 0x80) {
+            file.err = UTF8ERROR;
+          }
+          ch = (char) (((b1 & 0x1F) << 6) | (b2 & 0x3F));
+          break;
+
+        case 14:  // 3 bytes format: 1110xxxx 10xxxxxx 10xxxxxx
+          b2 = read(file);
+          b3 = read(file);
+          if(file.err == OK && ((b2 & 0xC0) != 0x80 || (b3 & 0xC0) != 0x80)) {
+            file.err = UTF8ERROR;
+          }
+          ch = (char) (((b1 & 0x0F) << 12) |
+            ((b2 & 0x3F) << 6) |
+            (b3 & 0x3F));
+          break;
+
+        default:  // ERROR + 4 bytes format: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
           file.err = UTF8ERROR;
-        }
-        ch = (char) (((b1 & 0x1F) << 6) | (b2 & 0x3F));
-        break;
-
-      case 14:  // 3 bytes format: 1110xxxx 10xxxxxx 10xxxxxx
-        b2 = read(file);
-        b3 = read(file);
-        if (file.err == OK && ((b2 & 0xC0) != 0x80 || (b3 & 0xC0) != 0x80)) {
-          file.err = UTF8ERROR;
-        }
-        ch = (char) (((b1 & 0x0F) << 12) |
-                     ((b2 & 0x3F) << 6) |
-                      (b3 & 0x3F));
-        break;
-
-      default:  // ERROR + 4 bytes format: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-        file.err = UTF8ERROR;
-        ch = '\0';
+          ch = '\0';
+      }
     }
     return ch;
   }
@@ -372,6 +374,9 @@ public class Files {
     r = OK;
     try {
       file.f.seek(pos);
+      if(file.err == EOF) {
+        file.err = OK;
+      }
     } catch(IOException e) {
       r = IOERROR;
     }

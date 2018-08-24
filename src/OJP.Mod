@@ -20,8 +20,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     END ;
 
   VAR sym: INTEGER;   (*last symbol read*)
-    level, version: INTEGER;
-    newSF: BOOLEAN;  (*option flag*)
+    level: INTEGER;
+    newSF, isDefinition: BOOLEAN;
     expression: PROCEDURE (VAR x: OJG.Item);  (*to avoid forward reference*)
     Type: PROCEDURE (typedef: BOOLEAN): OJB.Type;
     FormalType: PROCEDURE (): OJB.Type;
@@ -41,11 +41,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   BEGIN
     Strings.Copy(OJS.id, modName);
     obj := OJB.thisObj(OJS.id); OJS.Get(sym);
-    IF obj IS OJB.Module THEN
-      Strings.Copy(obj(OJB.Module).orgname, modName)
-    END ;
     IF obj = NIL THEN OJS.Mark("undef"); obj := dummy END ;
     IF (sym = OJS.period) & (obj.class = OJB.Mod) THEN
+      Strings.Copy(OJB.GModtab[-obj.lev].name, modName);
       OJS.Get(sym);
       IF sym = OJS.ident THEN obj := OJB.thisimport(obj, OJS.id); OJS.Get(sym);
         IF obj = NIL THEN OJS.Mark("undef"); obj := dummy END
@@ -117,7 +115,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF sym = OJS.times THEN
       expo := TRUE; OJS.Get(sym);
       IF level # 0 THEN OJS.Mark("remove asterisk") END
-    ELSE expo := version = 2
+    ELSE expo := isDefinition
     END
     RETURN expo
   END CheckExport;
@@ -954,12 +952,12 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     VAR obj, first: OJB.Object;
   BEGIN
     IF sym = OJS.ident THEN
-      first := OJB.NewObj(OJS.id, class); OJS.Get(sym);
+      first := OJB.InsertObj(OJS.id, class); OJS.Get(sym);
       first.expo := CheckExport();
       WHILE sym = OJS.comma DO
         OJS.Get(sym);
         IF sym = OJS.ident THEN
-          obj := OJB.NewObj(OJS.id, class); OJS.Get(sym);
+          obj := OJB.InsertObj(OJS.id, class); OJS.Get(sym);
           obj.expo := CheckExport()
         ELSE OJS.Mark("ident?")
         END
@@ -975,7 +973,6 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       typ, type: OJB.Type; len: INTEGER;
   BEGIN
     NEW(typ); typ.form := OJB.NoTyp;
-    Strings.Copy(modid, typ.modName);
     expression(x);
     IF (x.mode = OJB.Const) & (x.type.form = OJB.Int) & (x.a >= 0) THEN
       len := x.a
@@ -994,9 +991,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     VAR obj, obj0, new, bot, base: OJB.Object;
       type, typ, tp: OJB.Type;
       modName: OJS.Ident;
-  BEGIN NEW(typ); typ.form := OJB.NoTyp; typ.base := NIL; typ.mno := -level;
+  BEGIN NEW(typ); typ.form := OJB.NoTyp; typ.base := NIL;
     typ.nofpar := 0; bot := NIL;
-    Strings.Copy(modid, typ.modName);
     IF sym = OJS.lparen THEN
       OJS.Get(sym); (*record extension*)
       IF sym = OJS.ident THEN
@@ -1108,12 +1104,10 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     ELSIF sym = OJS.array THEN
       OJS.Get(sym); Check(OJS.of, "OF ?");
       NEW(typ); typ.form := OJB.Array; typ.len := -1;
-      Strings.Copy(modid, typ.modName);
       typ.base := FormalType()
     ELSIF sym = OJS.procedure THEN
       OJS.Get(sym); OJB.OpenScope;
       NEW(typ); typ.form := OJB.Proc; dmy := ProcedureType(typ, 0);
-      Strings.Copy(modid, typ.modName);
       typ.dsc := OJB.topScope.next; OJB.CloseScope;
       OJG.genSignature(typ)
     ELSE OJS.Mark("identifier expected"); typ := OJB.noType
@@ -1122,7 +1116,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   END FormalType0;
 
   PROCEDURE Type0(typedef: BOOLEAN): OJB.Type;
-    VAR dmy: INTEGER; obj: OJB.Object; ptbase: PtrBase;
+    VAR dmy: INTEGER; obj, tmp: OJB.Object; ptbase: PtrBase;
       type: OJB.Type; modName: OJS.Ident;
   BEGIN type := OJB.intType; (*sync*)
     IF (sym # OJS.ident) & (sym < OJS.array) THEN OJS.Mark("not a type");
@@ -1139,13 +1133,12 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     ELSIF sym = OJS.array THEN OJS.Get(sym); type := ArrayType()
     ELSIF sym = OJS.record THEN
       OJS.Get(sym); type := RecordType(); Check(OJS.end, "no END");
-      IF ~typedef & (version # 2) THEN
+      IF ~typedef & ~isDefinition THEN
         OJG.MakeRecordType(OJB.generateAnonymousTypeObj(type))
       END
     ELSIF sym = OJS.pointer THEN
       OJS.Get(sym); Check(OJS.to, "no TO");
       NEW(type);  type.form := OJB.Pointer; type.base := OJB.intType;
-      Strings.Copy(modid, type.modName);
       IF sym = OJS.ident THEN
         obj := OJB.thisObj(OJS.id);
         IF obj # NIL THEN
@@ -1161,9 +1154,10 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           (*enter into list of forward references to be fixed in Declarations*)
           NEW(ptbase); Strings.Copy(OJS.id, ptbase.name); ptbase.type := type;
            ptbase.next := pbsList; pbsList := ptbase;
-          (* Temporary save base type name (needed by OJG.internalName despite
+          (* Temporarily save base type name (needed by OJG.internalName despite
              forward references are not fixed yet) *)
-          NEW(type.base); Strings.Copy(ptbase.name, type.base.name)
+          NEW(type.base); NEW(tmp);
+          Strings.Copy(ptbase.name, tmp.name); type.base.typobj := tmp
         END ;
         OJS.Get(sym)
       ELSE type.base := Type(FALSE);
@@ -1172,7 +1166,6 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     ELSIF sym = OJS.procedure THEN
       OJS.Get(sym); OJB.OpenScope;
       NEW(type); type.form := OJB.Proc;
-      Strings.Copy(modid, type.modName);
       dmy := ProcedureType(type, 0); type.dsc := OJB.topScope.next;
       OJB.CloseScope;
       OJG.genSignature(type)
@@ -1199,9 +1192,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         IF sym = OJS.eql THEN OJS.Get(sym) ELSE OJS.Mark("= ?") END;
         expression(x);
         IF (x.type.form = OJB.String) & (x.b = 2) THEN OJG.StrToChar(x) END ;
-        obj := OJB.NewObj(id, OJB.Const); obj.expo := expo; obj.rdo := TRUE;
+        obj := OJB.InsertObj(id, OJB.Const); obj.expo := expo; obj.rdo := TRUE;
         IF x.mode = OJB.Const THEN
-          obj.val := x.a; obj.lev := x.b; obj.type := x.type
+          obj.val := x.a; obj.len := x.b; obj.type := x.type
         ELSE
           OJS.Mark("expression not constant"); obj.type := OJB.intType
         END;
@@ -1215,7 +1208,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         Strings.Copy(OJS.id, id); OJS.Get(sym); expo := CheckExport();
         IF sym = OJS.eql THEN OJS.Get(sym) ELSE OJS.Mark("=?") END ;
         tp := Type(TRUE);
-        obj := OJB.NewObj(id, OJB.Typ); obj.type := tp; obj.expo := expo;
+        obj := OJB.InsertObj(id, OJB.Typ); obj.type := tp; obj.expo := expo;
         obj.lev := level;
         IF tp.typobj = NIL THEN
           (*aliases must not modify the typobj*)
@@ -1233,8 +1226,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         END ;
         Check(OJS.semicolon, "; missing");
         IF (obj.type.form = OJB.Record) & ~alias THEN
-          Strings.Copy(obj.name, obj.type.name);
-          IF version # 2 THEN OJG.MakeRecordType(obj) END
+          IF ~isDefinition THEN OJG.MakeRecordType(obj) END
         END
       END
     END ;
@@ -1274,9 +1266,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     (* ProcedureDecl *) OJS.Get(sym);
     IF sym = OJS.ident THEN
       Strings.Copy(OJS.id, procid); OJS.Get(sym);
-      proc := OJB.NewObj(OJS.id, OJB.Const); proc.lev := level; parblksize := 0;
+      proc := OJB.InsertObj(OJS.id, OJB.Const); proc.lev := level; parblksize := 0;
       NEW(type); type.form := OJB.Proc; proc.type := type;
-      Strings.Copy(modid, type.modName);
       proc.expo := CheckExport();
       OJB.OpenScope; INC(level); proc.val := 0; type.base := OJB.noType;
       parblksize := ProcedureType(type, parblksize);  (*formal parameter list*)
@@ -1287,7 +1278,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           hasMain := TRUE
         END
       END ;
-      IF version # 2 THEN
+      IF ~isDefinition THEN
         Check(OJS.semicolon, "no ;"); locblksize := parblksize;
         locblksize := Declarations(locblksize);
         proc.type.dsc := OJB.topScope.next;
@@ -1332,34 +1323,35 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   END ProcedureDecl;
 
   PROCEDURE Module(outputFolder: ARRAY OF CHAR);
-    VAR dc, key: INTEGER;
-      impid, impid1: OJS.Ident;
+    VAR dc: INTEGER;
+      aliasName, impName: OJS.Ident;
       dmy: OJG.Item;
   BEGIN
-    version := 1;
+    isDefinition := FALSE;
     hasMain := FALSE;
     OJS.Get(sym);
     IF (sym = OJS.module) OR (sym = OJS.definition) THEN
-      IF sym = OJS.definition THEN version := 2 END ;
+      IF sym = OJS.definition THEN isDefinition := TRUE END ;
       OJS.Get(sym);
-      OJB.Init(outputFolder); OJB.OpenScope;
       IF sym = OJS.ident THEN
         Strings.Copy(OJS.id, modid); OJS.Get(sym);
       ELSE OJS.Mark("identifier expected")
       END ;
-      Check(OJS.semicolon, "no ;"); level := 0; dc := 0; key := 0;
-      IF (sym = OJS.import) & (version # 2) THEN
+      Check(OJS.semicolon, "no ;"); level := 0; dc := 0;
+      OJB.Init(outputFolder, modid); OJB.OpenScope;
+      IF sym = OJS.import THEN
         OJS.Get(sym);
         WHILE sym = OJS.ident DO
-          Strings.Copy(OJS.id, impid); OJS.Get(sym);
+          Strings.Copy(OJS.id, aliasName); OJS.Get(sym);
           IF sym = OJS.becomes THEN
             OJS.Get(sym);
-            IF sym = OJS.ident THEN Strings.Copy(OJS.id, impid1); OJS.Get(sym)
-            ELSE OJS.Mark("id expected"); impid1 := ""
+            IF isDefinition THEN OJS.Mark("module alias not allowed") END ;
+            IF sym = OJS.ident THEN Strings.Copy(OJS.id, impName); OJS.Get(sym)
+            ELSE OJS.Mark("id expected"); impName := ""
             END
-          ELSE Strings.Copy(impid, impid1)
+          ELSE Strings.Copy(aliasName, impName)
           END ;
-          OJB.Import(impid, impid1);
+          OJB.Import(aliasName, impName, modid);
           IF sym = OJS.comma THEN OJS.Get(sym)
           ELSIF sym = OJS.ident THEN OJS.Mark("comma missing")
           END
@@ -1370,7 +1362,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       WHILE sym = OJS.procedure DO
         ProcedureDecl; Check(OJS.semicolon, "no ;")
       END ;
-      IF version # 2 THEN
+      IF ~isDefinition THEN
         OJG.Header(OJB.topScope);
         OJG.MainProc(hasMain);
         OJG.ModuleBody(OJB.topScope);
@@ -1385,10 +1377,10 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       END ;
       IF sym # OJS.period THEN OJS.Mark("period missing") END ;
       IF OJS.errcnt = 0 THEN
-        OJB.Export(modid, newSF, key);
+        OJB.Export(modid, newSF);
       END ;
       IF OJS.errcnt = 0 THEN
-        IF version # 2 THEN OJG.Close END ;
+        IF ~isDefinition THEN OJG.Close END ;
       ELSE OJS.Mark("compilation FAILED"); OJG.deleteModule
       END ;
       OJB.CloseScope; pbsList := NIL

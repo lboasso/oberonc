@@ -1,0 +1,4 @@
+MODULE TestImport110;
+  CONST TEN* = 10;
+  TYPE X* = RECORD i*: INTEGER END;
+END TestImport110.

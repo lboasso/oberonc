@@ -125,15 +125,18 @@ MODULE OJG;
 
   PROCEDURE internalNameAt(type: OJB.Type; VAR out: ARRAY OF CHAR;
                            i: INTEGER): INTEGER;
+    VAR mod: OJB.Object;
   BEGIN
     IF type.form = OJB.Record THEN
-      i := Strings.Write(type.modName, out, i);
+      mod := OJB.GetModOf(type);
+      i := Strings.Write(mod.name, out, i);
       i := Strings.WriteChar("_", out, i);
-      i := Strings.Write(type.name, out, i)
+      i := Strings.Write(type.typobj.name, out, i)
     ELSIF type.form = OJB.Pointer THEN
-      i := Strings.Write(type.modName, out, i);
+      mod := OJB.GetModOf(type);
+      i := Strings.Write(mod.name, out, i);
       i := Strings.WriteChar("_", out, i);
-      i := Strings.Write(type.base.name, out, i)
+      i := Strings.Write(type.base.typobj.name, out, i)
     ELSIF type.form = OJB.Proc THEN
       i := normalize(type.signature, out, i)
     END
@@ -605,7 +608,7 @@ MODULE OJG;
             initializeRecord(x)
           ELSIF type.form = OJB.Array THEN
             initializeArray(x, tempVars)
-          ELSIF x.lev # 0 THEN
+          ELSIF x.lev > 0 THEN
             initializeLocalVar(x)
           END
         END ;
@@ -958,10 +961,9 @@ MODULE OJG;
     IF y.class = OJB.Par THEN
       x.b := 0
     ELSIF (y.class = OJB.Const) & (y.type.form = OJB.String) THEN
-      x.b := y.lev (*len*)
-    ELSE
-      x.r := y.lev
+      x.b := y.len
     END ;
+    x.r := y.lev
   END MakeItem;
 
   PROCEDURE FieldAccess*(VAR x: Item; y: OJB.Object);   (* x := x.y *)
@@ -1580,7 +1582,7 @@ MODULE OJG;
 
   PROCEDURE storeArrayR(i: INTEGER; type: OJB.Type; VAR x, y: Item);
     VAR desc, iname: ClassFormat.Descriptor;
-      cond, end, lastTmp, index, j: INTEGER;
+      cond, end, lastTmp, index: INTEGER;
   BEGIN
     IF type.form = OJB.Array THEN
       IF type.len < 0  THEN

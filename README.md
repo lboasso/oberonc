@@ -62,8 +62,8 @@ To run the tests included in the `tests` folder, type `make test`. The output
 should look like this:
 
     ...
-    TOTAL: 89
-    SUCCESSFUL: 89
+    TOTAL: 101
+    SUCCESSFUL: 101
     FAILED: 0
 
 ## Using the compiler
