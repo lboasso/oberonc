@@ -121,7 +121,7 @@ MODULE OJB;
       WHILE (x # NIL) & (x.name # name) DO x := x.next END ;
       IF (x # NIL) & (s # topScope) & (x.lev > 0) & (* no local or global *)
           (x.class IN {Var, Par, ParStruct}) THEN
-        OJS.Mark("level error, not accessible");
+        OJS.Mark("not accessible");
         x := NIL
       END ;
       s := s.dsc

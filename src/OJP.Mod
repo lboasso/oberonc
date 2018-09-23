@@ -141,7 +141,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   PROCEDURE TypeTest(VAR x: OJG.Item; T: OJB.Type; guard: BOOLEAN);
     VAR xt: OJB.Type;
   BEGIN xt := x.type;
-    IF (T.form IN {OJB.Pointer, OJB.Record}) & (T.form = xt.form) THEN
+    IF (T.form = xt.form) &
+       ((T.form = OJB.Pointer) OR
+        (T.form = OJB.Record) & (x.mode = OJB.ParStruct)) THEN
       WHILE (xt # T) & (xt # NIL) DO xt := xt.base END ;
       IF xt # T THEN xt := x.type;
         IF xt.form = OJB.Pointer THEN
