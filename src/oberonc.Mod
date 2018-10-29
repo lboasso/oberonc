@@ -5,7 +5,7 @@
 *)
 
 MODULE oberonc;
-IMPORT OJS, OJP, Out, Strings, Files;
+IMPORT OJS, OJP, Out, Strings;
 
   PROCEDURE Help;
   BEGIN
@@ -24,7 +24,6 @@ IMPORT OJS, OJP, Out, Strings, Files;
     VAR i, len, n: INTEGER;
       folder, arg: ARRAY OJS.maxPath OF CHAR;
       newSym: BOOLEAN;
-      f: Files.File;
   BEGIN
     n := ARGNUM();
     IF n < 2 THEN

@@ -3,8 +3,8 @@ MODULE Arrays2;
   VAR
        a : X;
        b : ARRAY 1 OF INTEGER;
-       i : ARRAY 3, 2 OF INTEGER;
-       j : ARRAY 2, 4 OF INTEGER;
+       (*i : ARRAY 3, 2 OF INTEGER;
+       j : ARRAY 2, 4 OF INTEGER;*)
        i0 : ARRAY 4, 3, 2 OF INTEGER;
        j0 : ARRAY 4, 3, 2 OF INTEGER;
   PROCEDURE P(s : X);

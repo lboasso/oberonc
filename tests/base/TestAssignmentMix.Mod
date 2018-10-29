@@ -4,14 +4,14 @@ MODULE TestAssignmentMix;
        TA = ARRAY 1 OF A;
        TB = ARRAY 1 OF B;
   VAR
-       ta : TA;
-       tb : TB;
+       (*ta : TA;
+       tb : TB;*)
        a : A;
        b : B;
        pa : POINTER TO A;
        pb : POINTER TO B;
-       ta2 : ARRAY 1 OF A;
-       tb2 : ARRAY 1 OF B;
+       (*ta2 : ARRAY 1 OF A;
+       tb2 : ARRAY 1 OF B;*)
 BEGIN
   (*b := a;  illegal assignment *)
   a := b; 

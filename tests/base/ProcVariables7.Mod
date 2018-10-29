@@ -5,7 +5,6 @@ MODULE ProcVariables7;
 
   VAR
     a: ProcA;
-    b: ProcB;
 
   PROCEDURE A;
   BEGIN

@@ -15,8 +15,6 @@ MODULE RecordAndTypeExtension;
     pb : POINTER TO B;
     a : A;
     b : B;
-    arr : ARRAY 1 OF POINTER TO A;
-    mulArr : ARRAY 1,3 OF POINTER TO A;
     k : INTEGER;
 
   PROCEDURE PrintBool(x : BOOLEAN);

@@ -1,7 +1,6 @@
 MODULE CaseNum1;
   TYPE ARR =  ARRAY 3 OF RECORD c: CHAR END;
-  VAR i, a: INTEGER;
-    b: ARR;
+  VAR b: ARR;
 
   PROCEDURE P(i: INTEGER);
      VAR a: INTEGER;

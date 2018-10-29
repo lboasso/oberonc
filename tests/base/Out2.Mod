@@ -12,7 +12,6 @@ MODULE Out2;
   VAR           
       i, j: INTEGER;
       s : ARRAY 2 OF R1;
-      s2 : ARRAY 2 OF ARRAY 5 OF R1;
       a : R0;
       b : R2;
 

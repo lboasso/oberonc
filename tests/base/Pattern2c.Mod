@@ -1,8 +1,6 @@
 MODULE Pattern2c;
 IMPORT SYSTEM;
-  VAR i, j, k : INTEGER;
-      x, y: REAL;
-      s, t, u: SET;
+  VAR s, t, u: SET;
 BEGIN 
   s := {1, 5} + {2, 7, 4};
   WriteInt(SYSTEM.VAL(INTEGER, s));

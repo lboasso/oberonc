@@ -12,7 +12,7 @@
 *)
 
 MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
-  IMPORT OJS, OJB, OJG, Out, Strings;
+  IMPORT OJS, OJB, OJG, Strings;
 
   TYPE PtrBase = POINTER TO PtrBaseDesc;
     PtrBaseDesc = RECORD  (*list of names of pointer base types*)
@@ -1310,6 +1310,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           OJS.Mark("function without result"); type.base := OJB.noType
         END ;
         OJG.Return(type.base, x);
+        OJB.CheckUnused(parblksize);
         OJB.CloseScope; DEC(level); Check(OJS.end, "no END");
         IF sym = OJS.ident THEN
           IF OJS.id # procid THEN OJS.Mark("no match") END ;
@@ -1378,6 +1379,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       ELSE OJS.Mark("identifier missing")
       END ;
       IF sym # OJS.period THEN OJS.Mark("period missing") END ;
+      IF ~isDefinition THEN OJB.CheckUnused(0) END ;
       IF OJS.errcnt = 0 THEN
         OJB.Export(modid, newSF);
       END ;

@@ -2,7 +2,6 @@ MODULE TestSystemVal;
 IMPORT SYSTEM;
   VAR
     a, b, c, i: INTEGER;
-    s: SET;
     r: REAL;
 BEGIN
   b := SYSTEM.VAL(INTEGER, {0, 5});

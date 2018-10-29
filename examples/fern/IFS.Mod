@@ -1,5 +1,5 @@
 MODULE  IFS;
-  IMPORT RandomNumbers, Out, XYplane;
+  IMPORT RandomNumbers, XYplane;
 
   VAR
     a1, b1, c1, d1, e1, f1, p1: REAL;   (* IFS parameters *)

@@ -7,5 +7,6 @@ MODULE TestAnonymousName;
 BEGIN
   y.i := "A";
   c := y.i;
+  x.i := 0;
   WriteChar(c)
 END TestAnonymousName.

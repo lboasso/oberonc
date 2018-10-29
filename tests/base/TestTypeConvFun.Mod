@@ -3,7 +3,6 @@ MODULE TestTypeConvFun;
   VAR x : REAL;
       y : INTEGER;
       c : CHAR;
-      c3 : ARRAY 2 OF CHAR;
       b : BOOLEAN;
       s : SET;
    

@@ -11,7 +11,7 @@ MODULE TestReturn0;
 
   PROCEDURE P3(): INTEGER;
   VAR dummy: INTEGER;
-    RETURN x
+    RETURN x+dummy
   END P3;
 BEGIN
   x := 1;

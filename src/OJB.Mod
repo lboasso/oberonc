@@ -39,6 +39,7 @@ MODULE OJB;
        *)
       lev*: INTEGER;
       expo*, rdo*: BOOLEAN;   (*exported / read-only*)
+      used: BOOLEAN;
       next*, dsc*: Object;
       type*: Type;
       recordType*, caseOrgType*: Type; (* computed, not serialized *)
@@ -92,7 +93,7 @@ MODULE OJB;
       new.class := class; new.next := NIL; new.rdo := FALSE; new.dsc := NIL;
       new.modref := -1; (*un-marked*); new.lev := 0; new.len := 0; new.val := 0;
       new.expo := FALSE; new.type := NIL; new.recordType := NIL;
-      new.caseOrgType := NIL;
+      new.caseOrgType := NIL; new.used := FALSE;
       x.next := new; obj := new
     ELSE obj := x.next; OJS.Mark("mult def")
     END ;
@@ -126,6 +127,7 @@ MODULE OJB;
       END ;
       s := s.dsc
     UNTIL (x # NIL) OR (s = NIL);
+    IF x # NIL THEN x.used := TRUE END
     RETURN x
   END thisObj;
 
@@ -165,6 +167,25 @@ MODULE OJB;
     VAR s: Object;
   BEGIN NEW(s); s.class := Head; s.dsc := topScope; s.next := NIL; topScope := s
   END OpenScope;
+
+  PROCEDURE CheckUnused*(parsNum: INTEGER);
+    VAR err: ARRAY OJS.IdLen*30 OF CHAR;
+      i: INTEGER; x: Object;
+  BEGIN
+    x := topScope.next;
+    i := 0;
+    (* skip parameters *)
+    WHILE i < parsNum DO x := x.next; INC(i) END;
+    i := 0;
+    WHILE x # NIL DO
+      IF ~x.expo & ~x.used & ((x.class = Var) OR (x.class = Mod)) THEN
+        i := Strings.Write(x.name, err, i);
+        i := Strings.WriteChar(" ", err, i)
+      END ;
+      x := x.next
+    END ;
+    IF i # 0 THEN OJS.MarkAppend("Unused: ", err) END
+  END CheckUnused;
 
   PROCEDURE CloseScope*;
   BEGIN topScope := topScope.dsc
@@ -227,7 +248,7 @@ MODULE OJB;
       mod := GModtab[i];
       IF mod.val # key THEN OJS.Mark("key inconsistency of imported module") END
     ELSE
-      NEW(mod); mod.class := Mod; mod.rdo := TRUE;
+      NEW(mod); mod.class := Mod; mod.rdo := TRUE; mod.expo := FALSE;
       Strings.Copy(name, mod.name); mod.val := key;
       mod.lev := -nofGMods; mod.type := noType;
       mod.dsc := NIL; mod.next := NIL;

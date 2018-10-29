@@ -1,8 +1,7 @@
 MODULE Pattern2a;
   VAR i, j, k, n: INTEGER;
       x, y: REAL;
-      s, t, u: SET;
-BEGIN 
+BEGIN
   i := 1+7;
   WriteInt(i);
   j := 7;

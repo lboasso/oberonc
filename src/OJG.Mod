@@ -879,7 +879,6 @@ MODULE OJG;
 
   PROCEDURE TypeTest*(VAR x: Item; T: OJB.Type; isguard: BOOLEAN);
     VAR iname: ClassFormat.Descriptor;
-      op: INTEGER;
   BEGIN
     IF isguard THEN
       IF x.oldType = NIL THEN x.oldType := x.type END
@@ -958,9 +957,7 @@ MODULE OJG;
     x.mode := y.class; x.type := y.type; x.a := y.val;  x.rdo := y.rdo;
     Strings.Copy(y.name, x.name);
     x.oldType := y.caseOrgType;
-    IF y.class = OJB.Par THEN
-      x.b := 0
-    ELSIF (y.class = OJB.Const) & (y.type.form = OJB.String) THEN
+    IF (y.class = OJB.Const) & (y.type.form = OJB.String) THEN
       x.b := y.len
     END ;
     x.r := y.lev

@@ -2,7 +2,7 @@ MODULE OpenArrays2;
   TYPE ARR = ARRAY 3 OF INTEGER;
   VAR
     x : ARR;
-    i,y : INTEGER;
+    i : INTEGER;
   
   PROCEDURE P1(VAR b : ARRAY OF INTEGER; c : ARR; VAR d : ARR; e : ARRAY OF INTEGER);
   BEGIN

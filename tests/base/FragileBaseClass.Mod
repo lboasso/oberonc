@@ -60,7 +60,6 @@ MODULE FragileBaseClass;
   *)
   PROCEDURE addAllListB(l: List; i: ARRAY OF INTEGER);
     VAR j: INTEGER;
-        n: Node;
   BEGIN
     FOR j := 0 TO LEN(i)-1 DO
       addList(l, i[j])
@@ -76,7 +75,6 @@ MODULE FragileBaseClass;
   *)
   PROCEDURE addAllListC(l: List; i: ARRAY OF INTEGER);
     VAR j: INTEGER;
-        n: Node;
   BEGIN
     FOR j := 0 TO LEN(i)-1 DO
       l.add(l, i[j])
