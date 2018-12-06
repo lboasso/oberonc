@@ -431,7 +431,7 @@ MODULE OJB;
   END OutMod;
 
   PROCEDURE OutType(f: Files.File; t: Type);
-    VAR fld, par: Object;
+    VAR fld, par, bot: Object;
       np: INTEGER;
   BEGIN
     IF Files.Status(f) = Files.OK THEN
@@ -455,8 +455,13 @@ MODULE OJB;
         ELSIF t.form = Array THEN OutType(f, t.base); Files.WriteNum(f, t.len)
         ELSIF t.form = Record THEN
           OutType(f, t.base);
+          IF t.base # NIL THEN
+            bot := t.base.dsc
+          ELSE
+            bot := NIL
+          END ;
           fld := t.dsc;
-          WHILE fld # NIL DO  (*fields*)
+          WHILE fld # bot DO  (*fields*)
             IF fld.expo THEN
               Files.WriteNum(f, Fld); Files.WriteAsciiStr(f, fld.name);
               OutType(f, fld.type)
