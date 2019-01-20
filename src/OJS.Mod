@@ -354,17 +354,18 @@ MODULE OJS;
   END Number;
 
   PROCEDURE comment;
-  BEGIN read;
-    REPEAT
-      WHILE ~EOF & (ch # "*") DO
-        IF ch = "(" THEN read;
-          IF ch = "*" THEN comment END
-        ELSE read
-        END
-      END ;
-      WHILE ch = "*" DO read END
-    UNTIL (ch = ")") OR EOF;
-    IF ~EOF THEN read ELSE Mark("unterminated comment") END
+    VAR level: INTEGER;
+  BEGIN
+    level := 1; read;
+    WHILE ~EOF & (level > 0) DO
+      IF ch = "(" THEN read;
+        IF ch = "*" THEN INC(level); read END
+      ELSIF ch = "*" THEN read;
+        IF ch = ")" THEN DEC(level); read END
+      ELSE read
+      END
+    END ;
+    IF level # 0 THEN Mark("unterminated comment") END
   END comment;
 
   PROCEDURE Get*(VAR sym: INTEGER);

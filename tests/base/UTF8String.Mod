@@ -2,6 +2,11 @@ MODULE UTF8String;
   VAR x : ARRAY 11 OF CHAR;
       i: INTEGER;
 
+(*
+   Comments can contain UTF8 chars: 世 界,
+   and (* can be (* nested *) *)
+ *)
+
 BEGIN
   x  := "Hello, 世 界";
   i := 0;
