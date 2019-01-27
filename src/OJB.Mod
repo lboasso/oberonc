@@ -353,8 +353,8 @@ MODULE OJB;
 
   PROCEDURE Import*(VAR aliasName, impName, selfName: OJS.Ident);
     VAR
-      class, version: INTEGER;
-      obj, mod, mod0: Object;
+      class, version, i: INTEGER;
+      obj, mod, mod0, dummyMod: Object;
       dummyType: Type;
       name: OJS.Ident;
       fname: ARRAY OJS.maxPath OF CHAR;
@@ -373,6 +373,9 @@ MODULE OJB;
         IF version # versionkey THEN OJS.Mark("wrong symbol version key") END;
         mod0 := InMod(f, selfName);
         IF mod0.name # impName THEN OJS.Mark("inconsistent module name") END;
+        (* Read imported modules *)
+        i := Files.ReadNum(f);
+        WHILE i > 0 DO dummyMod := InMod(f, selfName); DEC(i) END;
         class := Files.ReadNum(f);
         WHILE (class # 0) & (Files.Status(f) = Files.OK) DO
           IF class = Typ THEN
@@ -517,6 +520,10 @@ MODULE OJB;
     IF f # NIL THEN
       Files.WriteNum(f, versionkey);
       OutMod(f, GModtab[0]);
+      (* Write imported modules *)
+      Files.WriteNum(f, nofGMods - 1);
+      i := 1;
+      WHILE i < nofGMods DO OutMod(f, GModtab[i]); INC(i) END;
       obj := topScope.next;
       WHILE (obj # NIL) & (Files.Status(f) = Files.OK) DO
         IF obj.expo THEN

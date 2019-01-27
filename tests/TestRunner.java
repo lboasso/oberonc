@@ -42,6 +42,7 @@ public class TestRunner {
     check(tot, successful, failed, compileAndRunArgs("TestCmdLineArgs", "",
                                              new String[] {"Hello", "World!"}));
     testImports(tot, successful, failed);
+    testCyclicImports(tot, successful, failed);
     testWithInputs(tot, successful, failed);
     check(tot, successful, failed,
           compileAndFail("TestReadOnlyPar", 3, "read only"));
@@ -55,7 +56,6 @@ public class TestRunner {
     System.err.println("SUCCESSFUL: " + successful[0]);
     System.err.println("FAILED: " + failed[0]);
   }
-
 
   private static void check(int[] tot, int[] successful, int[] failed,
                             boolean res) {
@@ -95,11 +95,29 @@ public class TestRunner {
       check(tot, successful, failed, res);
     }
     res0 = compileAndRun("TestImport110");
-    OJP.Compile((suitePath + "TestImport111.Mod\0").toCharArray(), false,
-                outFolder.toCharArray());
-    res1 = OJS.errcnt == 0;
+    res1 = compile("TestImport111", false) == 0;
     res = compileAndRun("TestImport112");
     check(tot, successful, failed, res0 && res1 && res);
+  }
+
+  private static void testCyclicImports(int[] tot, int[] successful,
+                                        int[] failed) {
+
+    check(tot, successful, failed, compile("TestCyclicImport00A", true) == 0 &&
+                                   compile("TestCyclicImport01A", true) == 0 &&
+                                   compileAndFail("TestCyclicImport00B", 2,
+                                                  "recursive import"));
+
+    check(tot, successful, failed, compile("TestCyclicImport00A", true) == 0 &&
+                                   compile("TestCyclicImport01B", true) == 0 &&
+                                   compileAndFail("TestCyclicImport00B", 2,
+                                                  "recursive import"));
+
+    check(tot, successful, failed, compile("TestCyclicImport10A", true) == 0 &&
+                                   compile("TestCyclicImport12", true) == 0 &&
+                                   compile("TestCyclicImport11", true) == 0 &&
+                                   compileAndFail("TestCyclicImport10B", 2,
+                                                  "recursive import"));
   }
 
   private static void testWithInputs(int[] tot, int[] successful,
@@ -140,9 +158,7 @@ public class TestRunner {
       InputStream in = new ByteArrayInputStream(input.getBytes());
       System.setIn(in);
       System.setOut(ps);
-      OJP.Compile((suitePath + name + ".Mod\0").toCharArray(), true,
-                   outFolder.toCharArray());
-      if(OJS.errcnt != 0) {
+      if(compile(name, false) != 0) {
         System.err.println("Compilation of " + suitePath + name + ".Mod" +
                            " FAILED:");
         System.err.println(out.toString());
@@ -162,10 +178,13 @@ public class TestRunner {
       System.err.println("---END---\n");
       res = false;
     }
-    finally {
-      deleteFile("./out/" + name + ".class");
-    }
     return res;
+  }
+
+  private static int compile(String name, boolean newSym) {
+    OJP.Compile((suitePath + name + ".Mod\0").toCharArray(), newSym,
+                outFolder.toCharArray());
+    return OJS.errcnt;
   }
 
   private static boolean compileAndRunWithInput(String name, String input) {
@@ -178,15 +197,16 @@ public class TestRunner {
 
   private static boolean compileAndFail(String name, int errors, String msg) {
     boolean res;
+    int errcnt;
+
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     PrintStream ps = new PrintStream(out);
     System.setOut(ps);
-    OJP.Compile((suitePath + name + ".Mod\0").toCharArray(), false,
-                outFolder.toCharArray());
-    if(OJS.errcnt != errors) {
+    errcnt = compile(name, false);
+    if(errcnt != errors) {
       System.err.println("Test '" + name + "' FAILED:");
       System.err.println("EXPECTING: " + errors + " compilation error[s]");
-      System.err.println("FOUND: "  + OJS.errcnt);
+      System.err.println("FOUND: "  + errcnt);
       System.err.println("---END---\n");
       res = false;
     } else {
@@ -199,10 +219,6 @@ public class TestRunner {
       }
     }
     return res;
-  }
-
-  private static void deleteFile(String path) {
-    new File(path).delete();
   }
 
   private static String getExpectedOutput(String name) {
