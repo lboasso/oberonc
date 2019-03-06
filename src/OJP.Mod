@@ -39,7 +39,6 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   PROCEDURE qualident(VAR modName: ARRAY OF CHAR): OJB.Object;
     VAR obj: OJB.Object;
   BEGIN
-    Strings.Copy(OJS.id, modName);
     obj := OJB.thisObj(OJS.id); OJS.Get(sym);
     IF obj = NIL THEN OJS.Mark("undef"); obj := dummy END ;
     IF (sym = OJS.period) & (obj.class = OJB.Mod) THEN
@@ -1143,12 +1142,20 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       NEW(type);  type.form := OJB.Pointer; type.base := OJB.intType;
       IF sym = OJS.ident THEN
         obj := OJB.thisObj(OJS.id);
+        OJS.Get(sym);
         IF obj # NIL THEN
           IF (obj.class = OJB.Typ) &
              (obj.type.form IN {OJB.Record, OJB.NoTyp}) THEN
             type.base := obj.type
-          ELSIF obj.class = OJB.Mod THEN
-             OJS.Mark("external base type not implemented")
+          ELSIF (sym = OJS.period) & (obj.class = OJB.Mod) THEN
+            OJS.Get(sym);
+            IF sym = OJS.ident THEN obj := OJB.thisimport(obj, OJS.id);
+              OJS.Get(sym);
+              IF obj = NIL THEN OJS.Mark("undef")
+              ELSE type.base := obj.type
+              END
+            ELSE OJS.Mark("identifier expected")
+            END
           ELSE
             OJS.Mark("no valid base type")
           END
@@ -1160,8 +1167,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
              forward references are not fixed yet) *)
           NEW(type.base); NEW(tmp);
           Strings.Copy(ptbase.name, tmp.name); type.base.typobj := tmp
-        END ;
-        OJS.Get(sym)
+        END
       ELSE type.base := Type(FALSE);
         IF type.base.form # OJB.Record THEN OJS.Mark("must point to record") END
       END

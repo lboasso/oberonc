@@ -133,7 +133,7 @@ MODULE OJG;
       i := Strings.WriteChar("_", out, i);
       i := Strings.Write(type.typobj.name, out, i)
     ELSIF type.form = OJB.Pointer THEN
-      mod := OJB.GetModOf(type);
+      mod := OJB.GetModOf(type.base);
       i := Strings.Write(mod.name, out, i);
       i := Strings.WriteChar("_", out, i);
       i := Strings.Write(type.base.typobj.name, out, i)

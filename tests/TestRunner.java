@@ -42,6 +42,7 @@ public class TestRunner {
     check(tot, successful, failed, compileAndRunArgs("TestCmdLineArgs", "",
                                              new String[] {"Hello", "World!"}));
     testImports(tot, successful, failed);
+    testImportsWithOut(tot, successful, failed);
     testCyclicImports(tot, successful, failed);
     testWithInputs(tot, successful, failed);
     check(tot, successful, failed,
@@ -98,6 +99,13 @@ public class TestRunner {
     res1 = compile("TestImport111", false) == 0;
     res = compileAndRun("TestImport112");
     check(tot, successful, failed, res0 && res1 && res);
+  }
+
+  private static void testImportsWithOut(int[] tot, int[] successful,
+                                         int[] failed) {
+    check(tot, successful, failed, compile("TestImport140", true) == 0 &&
+                                   compile("TestImport141", true) == 0 &&
+                                   compileAndRun("TestImport142"));
   }
 
   private static void testCyclicImports(int[] tot, int[] successful,

@@ -321,15 +321,18 @@ MODULE OJB;
           ELSE obj := htyp.base.dsc
           END;
           class := Files.ReadNum(f);
+          last := NIL;
           WHILE class # 0 DO (* fields *)
             NEW(fld); fld.class := class;
             Files.ReadAsciiStr(f, fld.name);
             fld.expo := TRUE; fld.type := InType(f, selfName);
             fld.recordType := htyp;
-            fld.val := 0; fld.next := obj; obj := fld;
-            class := Files.ReadNum(f)
+            fld.val := 0; class := Files.ReadNum(f);
+            IF last = NIL THEN htyp.dsc := fld ELSE last.next := fld END ;
+            last := fld
           END ;
-          htyp.dsc := obj
+          (* append base type fields *)
+          IF last = NIL THEN htyp.dsc := obj ELSE last.next := obj END
         ELSIF form = Proc THEN
           htyp.base := InType(f, selfName);
           Files.ReadAsciiStr(f, htyp.signature);
