@@ -99,7 +99,6 @@ public class Files {
     len = name.length;
     i = 0;
     if(len > 0) {
-      i = 0;
       while(i < len && name[i] != '\0') {
         i++;
       }

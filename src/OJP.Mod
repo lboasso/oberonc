@@ -197,8 +197,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         IF x.type.form = OJB.Pointer THEN x.type := x.type.base
         ELSE OJS.Mark("not a pointer")
         END
-      (*type guard*)
-      ELSIF (sym = OJS.lparen) & (x.type.form IN {OJB.Record, OJB.Pointer}) THEN
+      ELSE (*type guard*)
         OJS.Get(sym);
         IF sym = OJS.ident THEN
           obj := qualident(modName);
@@ -425,9 +424,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       IF sym # OJS.rbrace THEN OJS.Mark(" } missing") END ;
       OJG.MakeConstItem(x, OJB.setType, 0) (*empty set*)
     ELSE element(x);
-      WHILE (sym < OJS.rparen) OR (sym > OJS.rbrace) DO
+      WHILE sym < OJS.rparen DO
         IF sym = OJS.comma THEN OJS.Get(sym)
-        ELSIF sym # OJS.rbrace THEN OJS.Mark("missing comma")
+        ELSE OJS.Mark("missing comma")
         END ;
         element(y); OJG.SetOp(OJS.plus, x, y)
       END
