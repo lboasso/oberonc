@@ -1,10 +1,4 @@
 (*
-  Copyright 2017 Luca Boasso. All rights reserved.
-  Use of this source code is governed by a MIT
-  license that can be found in the LICENSE file.
-*)
-
-(*
   Strings provides a set of operations on strings (i.e., on string constants and
   character arrays, both of which contain the character 0X as a terminator).
   All positions in strings start at 0.

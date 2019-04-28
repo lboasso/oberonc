@@ -1,3 +1,9 @@
+/*
+  Copyright 2017 Luca Boasso. All rights reserved.
+  Use of this source code is governed by a MIT
+  license that can be found in the LICENSE file.
+*/
+
 import java.io.IOException;
 import java.util.Locale;
 
