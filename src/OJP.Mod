@@ -388,6 +388,11 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           ELSIF (x.type.form = OJB.Int) & (y.type.form = OJB.Real) THEN
             OJG.RealToInt(y);
             restyp := x.type
+          ELSIF ((x.type.form = OJB.Pointer) & (y.type.form = OJB.Pointer)) OR
+                ((x.type.form = OJB.Proc) & (y.type.form = OJB.Proc))
+          THEN
+            OJG.PointerToPointer(y, x.type);
+            restyp := x.type
           ELSE OJS.Mark("casting not allowed")
           END ;
           x := y
