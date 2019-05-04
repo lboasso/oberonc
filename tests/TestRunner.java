@@ -45,6 +45,7 @@ public class TestRunner {
     testImportsWithOut(tot, successful, failed);
     testCyclicImports(tot, successful, failed);
     testWithInputs(tot, successful, failed);
+    testTypeGuardExt(tot, successful, failed);
     check(tot, successful, failed,
           compileAndFail("TestReadOnlyPar", 3, "read only"));
     check(tot, successful, failed,
@@ -144,6 +145,12 @@ public class TestRunner {
       check(tot, successful, failed, compileAndRunWithInput(tests[i],
                                                             inputs[i]));
     }
+  }
+
+  private static void testTypeGuardExt(int[] tot, int[] successful,
+                                         int[] failed) {
+    check(tot, successful, failed, compile("ExtTypes", true) == 0 &&
+                                   compileAndRun("TestTypeGuardExt"));
   }
 
   private static boolean assertEquals(String name, String expected, String actual) {

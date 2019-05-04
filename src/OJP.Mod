@@ -202,7 +202,6 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         IF sym = OJS.ident THEN
           obj := qualident(modName);
           IF obj.class = OJB.Typ THEN
-            Strings.Copy(modName, x.modName);
             TypeTest(x, obj.type, TRUE)
           ELSE
             OJS.Mark("guard type expected")
@@ -1172,7 +1171,10 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           Strings.Copy(ptbase.name, tmp.name); type.base.typobj := tmp
         END
       ELSE type.base := Type(FALSE);
-        IF type.base.form # OJB.Record THEN OJS.Mark("must point to record") END
+        IF type.base.form # OJB.Record THEN
+          OJS.Mark("must point to record");
+          type := OJB.intType
+        END
       END
     ELSIF sym = OJS.procedure THEN
       OJS.Get(sym); OJB.OpenScope;
