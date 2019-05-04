@@ -2195,14 +2195,6 @@ MODULE OJG;
     ClassFormat.putInsn(topCtx.m, Opcodes.D2I)
   END Floor;
 
-  PROCEDURE PointerToPointer*(VAR x: Item; newtype: OJB.Type);
-  VAR desc: ClassFormat.Descriptor;
-  BEGIN
-    load(x);
-    internalName(newtype, desc);
-    ClassFormat.putTypeInsn(topCtx.m, Opcodes.CHECKCAST, desc)
-  END PointerToPointer;
-
   PROCEDURE IntToReal*(VAR x: Item);
   BEGIN
     load(x);
