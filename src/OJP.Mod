@@ -1167,7 +1167,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
            ptbase.next := pbsList; pbsList := ptbase;
           (* Temporarily save base type name (needed by OJG.internalName despite
              forward references are not fixed yet) *)
-          NEW(type.base); NEW(tmp);
+          NEW(type.base); type.base.form := OJB.Int; NEW(tmp);
           Strings.Copy(ptbase.name, tmp.name); type.base.typobj := tmp
         END
       ELSE type.base := Type(FALSE);
@@ -1259,7 +1259,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     ptbase := pbsList;
     WHILE ptbase # NIL DO
       IF ptbase.type.base.form = OJB.Int THEN
-       OJS.Mark("undefined pointer base of")
+       OJS.MarkAppend("undefined pointer base: ", ptbase.name)
       END ;
       ptbase := ptbase.next
     END ;
