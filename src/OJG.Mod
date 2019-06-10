@@ -963,6 +963,19 @@ MODULE OJG;
     x.r := y.lev
   END MakeItem;
 
+  PROCEDURE ConstTypeTest*(VAR x: Item);
+  BEGIN
+    IF x.mode IN {OJB.Var, OJB.Par, OJB.ParStruct, Field, Stack, RegI} THEN
+      IF x.mode IN {Stack, Field} THEN
+        ClassFormat.putInsn(topCtx.m, Opcodes.POP)
+      ELSIF x.mode = RegI THEN
+        ClassFormat.putInsn(topCtx.m, Opcodes.POP2)
+      END ;
+      MakeConstItem(x, OJB.boolType, 1)
+    ELSE OJS.Mark("Unexpected internal mode")
+    END
+  END ConstTypeTest;
+
   PROCEDURE FieldAccess*(VAR x: Item; y: OJB.Object);   (* x := x.y *)
   BEGIN
     load(x);

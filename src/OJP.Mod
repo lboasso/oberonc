@@ -157,7 +157,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           END
         ELSE OJS.Mark("incompatible types")
         END
-      ELSIF ~guard THEN OJG.MakeConstItem(x, OJB.boolType, 1)
+      ELSIF ~guard THEN OJG.ConstTypeTest(x)
       END
     ELSE OJS.Mark("type mismatch")
     END ;
