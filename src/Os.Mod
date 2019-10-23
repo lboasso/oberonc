@@ -6,4 +6,7 @@
 
 DEFINITION Os;
   PROCEDURE GetEnv*(VAR out: ARRAY OF CHAR; name: ARRAY OF CHAR);
+
+  (* Get time in seconds since 2010-01-01-UTC *)
+  PROCEDURE CurrentTime*(): INTEGER;
 END Os.

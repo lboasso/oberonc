@@ -24,7 +24,7 @@ MODULE OJS;
     maxExp = 38; minExp = -45;
     stringBufSize* = 256; maxStrx = stringBufSize*500;
     maxSrcSize = 200000;
-    maxErrMsgSize = 100;
+    maxErrMsgSize = 200;
     maxPath* = 200;
 
     (*lexical symbols*)

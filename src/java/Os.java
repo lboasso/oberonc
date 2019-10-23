@@ -6,6 +6,8 @@
 
 public final class Os {
 
+  private static long date2010x01x01xUTC = 1262304000000L;
+
   private static String toString(char[] name) {
     int i;
 
@@ -32,5 +34,9 @@ public final class Os {
         out[0] = '\0';
       }
     }
+  }
+
+  public static int CurrentTime() {
+    return (int) ((System.currentTimeMillis() - date2010x01x01xUTC) / 1000);
   }
 }
