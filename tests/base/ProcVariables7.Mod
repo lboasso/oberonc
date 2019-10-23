@@ -17,9 +17,16 @@ MODULE ProcVariables7;
     WriteChar("B")
   END B;
 
+  PROCEDURE C(x: PROCEDURE(b: BYTE; c: CHAR; r: REAL));
+  BEGIN
+    WriteChar("C")
+  END C;
+
 BEGIN
+  a := NIL;
   a := A;
   a();
   a := B;
-  a
+  a;
+  C(NIL)
 END ProcVariables7.

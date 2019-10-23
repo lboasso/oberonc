@@ -30,7 +30,7 @@ public class TestRunner {
       "TestFor1", "Out1", "TestAssert", "CaseChar0", "Out6", "TestSystemVal",
       "TestNestedProcs", "Pattern1", "TestStringsMod", "OutTest",
       "ProcVariables7", "RecordAssignment2", "RecordParam", "CaseRecord3",
-      "VarParGuard", "TestTypeTest"
+      "VarParGuard", "TestTypeTest", "TestConstFunc"
     };
     successful[0] = 0;
     failed[0] = 0;
@@ -107,6 +107,9 @@ public class TestRunner {
     check(tot, successful, failed, compile("TestImport140", true) == 0 &&
                                    compile("TestImport141", true) == 0 &&
                                    compileAndRun("TestImport142"));
+
+    check(tot, successful, failed, compile("TestImport150", true) == 0 &&
+                                   compileAndRun("TestImport151"));
   }
 
   private static void testCyclicImports(int[] tot, int[] successful,

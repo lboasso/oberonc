@@ -337,7 +337,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     IF npar # 0 THEN expression(x); n := 1 END ;
     WHILE sym = OJS.comma DO
       OJS.Get(sym);
-      IF x.mode # OJB.Typ THEN (* x.mode = ORB.Typ for SYSTEM.VAL(x, y) *)
+      IF (x.mode # OJB.Typ) & (* x.mode = ORB.Typ for SYSTEM.VAL(x, y) *)
+         (x.mode # OJB.Const) (* allow constant folding in OJG.Shift/Band/Bor *)
+         THEN
         OJG.ValueParam(x)
       END ;
       expression(y);
@@ -1112,7 +1114,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       OJS.Get(sym); OJB.OpenScope;
       NEW(typ); typ.form := OJB.Proc; dmy := ProcedureType(typ, 0);
       typ.dsc := OJB.topScope.next; OJB.CloseScope;
-      OJG.genSignature(typ)
+      OJG.genSignature(typ);
+      OJG.MakeProcType(typ)
     ELSE OJS.Mark("identifier expected"); typ := OJB.noType
     END
     RETURN typ
@@ -1181,7 +1184,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       NEW(type); type.form := OJB.Proc;
       dmy := ProcedureType(type, 0); type.dsc := OJB.topScope.next;
       OJB.CloseScope;
-      OJG.genSignature(type)
+      OJG.genSignature(type);
+      OJG.MakeProcType(type)
     ELSE OJS.Mark("illegal type")
     END
     RETURN type

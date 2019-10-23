@@ -49,7 +49,7 @@ MODULE OJG;
     relmap0: ARRAY 6 OF INTEGER;  (*condition codes for relations with 0*)
     relmapNil: ARRAY 2 OF INTEGER;  (*condition codes for relations with NIL*)
     relmapAdr: ARRAY 2 OF INTEGER;  (*condition codes for relations with adr*)
-
+    dummyMethod: ClassFormat.MethodInfo;
   PROCEDURE curStack*(): INTEGER;
     RETURN topCtx.m.curStack
   END curStack;
@@ -63,7 +63,7 @@ MODULE OJG;
   BEGIN
     ClassFormat.finalizeMethod(topCtx.c, topCtx.m);
     clearCtx(topCtx);
-    topCtx.m := NIL
+    topCtx.m := dummyMethod
   END closeContext;
 
   PROCEDURE SetCC(VAR x: Item; n: INTEGER);
@@ -701,7 +701,7 @@ MODULE OJG;
     IF i = -1 THEN OJS.Mark("Maximum file path length reached") END
   END genClassFilePath;
 
-  PROCEDURE MakeProcType(type: OJB.Type);
+  PROCEDURE MakeProcType*(type: OJB.Type);
     VAR typeName: ClassFormat.Descriptor;
       path: ARRAY OJS.maxPath OF CHAR;
       newCtx: ClassContext;
@@ -963,14 +963,19 @@ MODULE OJG;
     x.r := y.lev
   END MakeItem;
 
+  PROCEDURE Pop(x: Item);
+  BEGIN
+    IF x.mode IN {Stack, Field} THEN
+      ClassFormat.putInsn(topCtx.m, Opcodes.POP)
+    ELSIF x.mode = RegI THEN
+      ClassFormat.putInsn(topCtx.m, Opcodes.POP2)
+    END
+  END Pop;
+
   PROCEDURE ConstTypeTest*(VAR x: Item);
   BEGIN
     IF x.mode IN {OJB.Var, OJB.Par, OJB.ParStruct, Field, Stack, RegI} THEN
-      IF x.mode IN {Stack, Field} THEN
-        ClassFormat.putInsn(topCtx.m, Opcodes.POP)
-      ELSIF x.mode = RegI THEN
-        ClassFormat.putInsn(topCtx.m, Opcodes.POP2)
-      END ;
+      Pop(x);
       MakeConstItem(x, OJB.boolType, 1)
     ELSE OJS.Mark("Unexpected internal mode")
     END
@@ -2193,19 +2198,29 @@ MODULE OJG;
 
   PROCEDURE Odd*(VAR x: Item);
   BEGIN
-    load(x);
-    pushConst(1);
-    ClassFormat.putInsn(topCtx.m, Opcodes.IAND);
-    SetCC(x, Opcodes.IFNE)
+    IF x.mode = OJB.Const THEN
+      x.a := ORD(ODD(x.a))
+    ELSE
+      load(x);
+      pushConst(1);
+      ClassFormat.putInsn(topCtx.m, Opcodes.IAND);
+      SetCC(x, Opcodes.IFNE)
+    END
   END Odd;
 
   PROCEDURE Floor*(VAR x: Item);
+    VAR f: REAL;
   BEGIN
-    load(x);
-    ClassFormat.putInsn(topCtx.m, Opcodes.F2D);
-    ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKESTATIC, "java/lang/Math",
-                              "floor", "(D)D", 1);
-    ClassFormat.putInsn(topCtx.m, Opcodes.D2I)
+    IF x.mode = OJB.Const THEN
+       f := SYSTEM.VAL(REAL, x.a);
+       x.a := FLOOR(f)
+    ELSE
+      load(x);
+      ClassFormat.putInsn(topCtx.m, Opcodes.F2D);
+      ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKESTATIC, "java/lang/Math",
+                                "floor", "(D)D", 1);
+      ClassFormat.putInsn(topCtx.m, Opcodes.D2I)
+    END
   END Floor;
 
   PROCEDURE IntToReal*(VAR x: Item);
@@ -2224,8 +2239,12 @@ MODULE OJG;
 
   PROCEDURE Float*(VAR x: Item);
   BEGIN
-    load(x);
-    ClassFormat.putInsn(topCtx.m, Opcodes.I2F)
+    IF x.mode = OJB.Const THEN
+       x.a := SYSTEM.VAL(INTEGER, FLT(x.a))
+    ELSE
+      load(x);
+      ClassFormat.putInsn(topCtx.m, Opcodes.I2F)
+    END
   END Float;
 
   PROCEDURE Ord*(VAR x: Item);
@@ -2238,7 +2257,9 @@ MODULE OJG;
 
   PROCEDURE Len*(VAR x: Item);
   BEGIN
-    IF x.type.len >= 0 THEN x.mode := OJB.Const; x.a := x.type.len
+    IF x.type.len >= 0 THEN
+      Pop(x);
+      x.mode := OJB.Const; x.a := x.type.len
     ELSE (*open array*)
       load(x);
       ClassFormat.putInsn(topCtx.m, Opcodes.ARRAYLENGTH);
@@ -2263,35 +2284,54 @@ MODULE OJG;
       op := Opcodes.ISHR
     ELSE op := Ror
     END ;
-    load(x);
-    load(y);
-    IF op = Ror THEN
-      ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKESTATIC, "OberonRuntime",
-                                "ROR", "(II)I", 2)
+    IF (x.mode = OJB.Const) & (y.mode = OJB.Const) THEN
+      IF fct = 0 THEN
+        x.a := LSL(x.a, y.a)
+      ELSIF fct = 1 THEN
+        x.a := ASR(x.a, y.a)
+      ELSE
+        x.a := ROR(x.a, y.a)
+      END
     ELSE
-      ClassFormat.putInsn(topCtx.m, op)
+      loadAndMaybeSwap(x, y);
+      IF op = Ror THEN
+        ClassFormat.putMethodInsn(topCtx.m, Opcodes.INVOKESTATIC, "OberonRuntime",
+                                  "ROR", "(II)I", 2)
+      ELSE
+        ClassFormat.putInsn(topCtx.m, op)
+      END
     END
   END Shift;
 
   PROCEDURE Band*(VAR x, y: Item);
   BEGIN
-    load(x);
-    load(y);
-    ClassFormat.putInsn(topCtx.m, Opcodes.IAND)
+    IF (x.mode = OJB.Const) & (y.mode = OJB.Const) THEN
+       x.a := AND(x.a, y.a)
+    ELSE
+      loadAndMaybeSwap(x, y);
+      ClassFormat.putInsn(topCtx.m, Opcodes.IAND)
+    END
   END Band;
 
   PROCEDURE Bor*(VAR x, y: Item);
   BEGIN
-    load(x);
-    load(y);
-    ClassFormat.putInsn(topCtx.m, Opcodes.IOR)
+    IF (x.mode = OJB.Const) & (y.mode = OJB.Const) THEN
+       x.a := BOR(x.a, y.a)
+    ELSE
+      loadAndMaybeSwap(x, y);
+      ClassFormat.putInsn(topCtx.m, Opcodes.IOR)
+    END
   END Bor;
 
   PROCEDURE Bnot*(VAR x: Item);
   BEGIN
-    load(x);
-    pushConst(-1);
-    ClassFormat.putInsn(topCtx.m, Opcodes.IXOR)
+    IF x.mode = OJB.Const THEN
+       x.a := NOT(x.a)
+    ELSE
+      load(x);
+      pushConst(-1);
+      ClassFormat.putInsn(topCtx.m, Opcodes.IXOR)
+    END
   END Bnot;
 
   PROCEDURE Open*(modid: ARRAY OF CHAR);
@@ -2304,7 +2344,9 @@ MODULE OJG;
     topCtx := ctx;
     topCtx.c := ClassFormat.NewCF(Opcodes.ACCxPUBLIC + Opcodes.ACCxFINAL,
                                   topCtx.className, "java/lang/Object");
-    topCtx.m := ClassFormat.NewMI(topCtx.c, Opcodes.ACCxPUBLIC, "DUMMY", "()V")
+    dummyMethod := ClassFormat.NewMI(topCtx.c, Opcodes.ACCxPUBLIC, "DUMMY",
+                                     "()V");
+    topCtx.m := dummyMethod
   END Open;
 
   PROCEDURE Header*(topScope: OJB.Object);
