@@ -37,12 +37,13 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   END Check;
 
   PROCEDURE qualident(VAR modName: ARRAY OF CHAR): OJB.Object;
-    VAR obj: OJB.Object;
+    VAR obj, modObj: OJB.Object;
   BEGIN
     obj := OJB.thisObj(OJS.id); OJS.Get(sym);
     IF obj = NIL THEN OJS.Mark("undef"); obj := dummy END ;
     IF (sym = OJS.period) & (obj.class = OJB.Mod) THEN
-      Strings.Copy(OJB.GModtab[-obj.lev].name, modName);
+      modObj := OJB.GetModFrom(obj);
+      Strings.Copy(modObj.name, modName);
       OJS.Get(sym);
       IF sym = OJS.ident THEN obj := OJB.thisimport(obj, OJS.id); OJS.Get(sym);
         IF obj = NIL THEN OJS.Mark("undef"); obj := dummy END

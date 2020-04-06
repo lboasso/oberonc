@@ -60,7 +60,7 @@ MODULE OJB;
     byteType*, boolType*, charType*: Type;
     intType*, realType*, setType*, nilType*, noType*, strType*: Type;
     nofGMods, nofLMods, nofLTypes, anonRecIdx: INTEGER;
-    GModtab*: ARRAY MaxGModtab OF Object; (* GModtab[0] = compiling module *)
+    GModtab: ARRAY MaxGModtab OF Object; (* GModtab[0] = compiling module *)
     LModtab: ARRAY MaxLModtab OF Object;
     LTyptab: ARRAY MaxTyptab OF Type; (* LTyptab[0] = NIL *)
     outFolder, homeFolder: ARRAY OJS.maxPath OF CHAR;
@@ -72,16 +72,16 @@ MODULE OJB;
     RETURN i
   END getOutputFolder;
 
-  PROCEDURE GetModOf*(type: Type): Object;
+  PROCEDURE GetModFrom*(obj: Object): Object;
     VAR modIdx: INTEGER;
   BEGIN
     modIdx := 0;
-    IF (type.typobj # NIL) & (type.typobj.lev < 0) THEN
+    IF (obj # NIL) & (obj.lev < 0) THEN
       (* external type *)
-      modIdx := -type.typobj.lev;
+      modIdx := -obj.lev;
     END
     RETURN GModtab[modIdx]
-  END GetModOf;
+  END GetModFrom;
 
   (*insert new Object with name id*)
   PROCEDURE InsertObj*(id: OJS.Ident; class: INTEGER): Object;

@@ -128,12 +128,12 @@ MODULE OJG;
     VAR mod: OJB.Object;
   BEGIN
     IF type.form = OJB.Record THEN
-      mod := OJB.GetModOf(type);
+      mod := OJB.GetModFrom(type.typobj);
       i := Strings.Write(mod.name, out, i);
       i := Strings.WriteChar("_", out, i);
       i := Strings.Write(type.typobj.name, out, i)
     ELSIF type.form = OJB.Pointer THEN
-      mod := OJB.GetModOf(type.base);
+      mod := OJB.GetModFrom(type.base.typobj);
       i := Strings.Write(mod.name, out, i);
       i := Strings.WriteChar("_", out, i);
       i := Strings.Write(type.base.typobj.name, out, i)
