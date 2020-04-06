@@ -1338,12 +1338,30 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         OJG.genSignature(proc.type);
         OJB.CloseScope; DEC(level)
       END
+    ELSE OJS.Mark("proc id expected")
     END
   END ProcedureDecl;
 
+  PROCEDURE Import;
+    VAR aliasName, impName: OJS.Ident;
+  BEGIN
+    IF sym = OJS.ident THEN
+      Strings.Copy(OJS.id, aliasName); OJS.Get(sym);
+      IF sym = OJS.becomes THEN
+        OJS.Get(sym);
+        IF isDefinition THEN OJS.Mark("module alias not allowed") END ;
+        IF sym = OJS.ident THEN Strings.Copy(OJS.id, impName); OJS.Get(sym)
+        ELSE OJS.Mark("id expected"); impName := ""
+        END
+      ELSE Strings.Copy(aliasName, impName)
+      END ;
+      OJB.Import(aliasName, impName, modid)
+    ELSE OJS.Mark("id expected")
+    END
+  END Import;
+
   PROCEDURE Module(outputFolder: ARRAY OF CHAR);
     VAR dc: INTEGER;
-      aliasName, impName: OJS.Ident;
       dmy: OJG.Item;
   BEGIN
     isDefinition := FALSE;
@@ -1359,23 +1377,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       Check(OJS.semicolon, "no ;"); level := 0; dc := 0;
       OJB.Init(outputFolder, modid); OJB.OpenScope;
       IF sym = OJS.import THEN
-        OJS.Get(sym);
-        WHILE sym = OJS.ident DO
-          Strings.Copy(OJS.id, aliasName); OJS.Get(sym);
-          IF sym = OJS.becomes THEN
-            OJS.Get(sym);
-            IF isDefinition THEN OJS.Mark("module alias not allowed") END ;
-            IF sym = OJS.ident THEN Strings.Copy(OJS.id, impName); OJS.Get(sym)
-            ELSE OJS.Mark("id expected"); impName := ""
-            END
-          ELSE Strings.Copy(aliasName, impName)
-          END ;
-          OJB.Import(aliasName, impName, modid);
-          IF sym = OJS.comma THEN OJS.Get(sym)
-          ELSIF sym = OJS.ident THEN OJS.Mark("comma missing")
-          END
-        END ;
-        Check(OJS.semicolon, "no ;")
+        OJS.Get(sym); Import;
+        WHILE sym = OJS.comma DO OJS.Get(sym); Import END ;
+        Check(OJS.semicolon, "; missing")
       END ;
       OJG.Open(modid); dc := Declarations(dc);
       WHILE sym = OJS.procedure DO

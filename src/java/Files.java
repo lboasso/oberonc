@@ -228,6 +228,81 @@ public class Files {
     }
   }
 
+  /*
+      example: read -999999999 = 11000100011001010011011000000001
+                               = 1100 0100011 0010100 1101100 0000001
+              back from 10000001 11101100 10010100 10100011 01111100
+
+       1 0000001
+       ^----------- one so these bits represent an unsigned byte
+                    >= 128
+
+       remove the first one -> 1 0000001 - 0x80 =
+                               00000001 =
+                               0000 0000000 0000000 0000000 0000001
+       The number 0000001 represents the first least significant 7 bits group
+       of the original number.
+       The next byte read 11101100, encode the next 7 bits group (after
+       removing the first one, like before), so we shift it by 7 and add it to
+       the previous number:
+
+       1 1101100 >= 128
+       remove the first one -> 1 1101100 - 0x80 =
+                               0 1101100 =
+                               0000 0000000 0000000 0000000 1101100
+       shift to the left by 7 on a 32 bit range  ->
+                               00000000000000000011011000000000
+
+       and add it to the previous number:
+                               00000000000000000011011000000000 +
+                               00000000000000000000000000000001
+                        =      00000000000000000011011000000001
+                        =  0000 0000000 0000000 1101100 0000001
+
+       We keep doing the above for the next bytes with the MSB set to 1
+       resulting in the sum  0000 0100011 0010100 1101100 0000001.
+
+
+       the last byte 01111100 = 124 < 128
+
+       0 1 111100
+         ^---------- sign of the original number
+       ^----------- tag, always 0 for the last byte read.
+
+      We separate the sign bit of the original number form the rest.
+
+      Sign
+         0 1 111100 AND 0x40
+       = 0 1 111100 AND
+         0 1 000000
+       = 0 1 000000
+
+       The rest
+          0 1 111100 AND 0x3F
+       =  0 1 111100 AND
+          0 0 111111
+       =  0 0 111100
+
+      We now can sign extend this last most significant 7 bits of the original
+      number by subtracting  0 0 111100 with 0 1 000000:
+
+                               0000 0000000 0000000 0000000 0 0 111100 -
+                               0000 0000000 0000000 0000000 0 1 000000
+                           =   1111 1111111 1111111 1111111 1 1 111100
+
+      Now we can do a final shift and sum it with
+      0000 0100011 0010100 1101100 0000001, to obtain the result
+
+
+                              1111 1111111 1111111 1111111 1 1 111100 << 28
+                           =  1100 0000000 0000000 0000000 0000000
+
+                              0000 0100011 0010100 1101100 0000001 +
+                              1100 0000000 0000000 0000000 0000000
+                           =  1100 0100011 0010100 1101100 0000001
+                           =  -999999999
+
+  */
   public static int ReadNum(Files_FileDesc file) {
     int n, y, b, x;
     x = 0;
