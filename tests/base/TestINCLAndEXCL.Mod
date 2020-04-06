@@ -74,6 +74,15 @@ MODULE TestINCLAndEXCL;
     PrintSet(i[0].b); (* {1 3 8 18} *)
   END P1; 
 
+
+  PROCEDURE P2(VAR a0 : SET);
+    VAR x : BYTE;
+  BEGIN
+    x := 1;
+    INCL(a0, 8+x);
+    PrintSet(a0); (* {2 9} *)
+  END P2;
+
 BEGIN
   y := K;
   EXCL(y, 2); (* {1 3} *)
@@ -93,5 +102,7 @@ BEGIN
   y := K;
   b[1] := K;
   P0(y, b);
-  P1
+  P1;
+  y := {2};
+  P2(y)
 END TestINCLAndEXCL.

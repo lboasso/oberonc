@@ -1,5 +1,5 @@
 MODULE UTF8String;
-  VAR x : ARRAY 11 OF CHAR;
+  VAR x : ARRAY 15 OF CHAR;
       i: INTEGER;
 
 (*
@@ -8,7 +8,7 @@ MODULE UTF8String;
  *)
 
 BEGIN
-  x  := "Hello, 世 界";
+  x  := "Hello, 世 界 - Ʉ";
   i := 0;
   WHILE (i < LEN(x)) & (x[i] # 0X) DO
     WriteChar(x[i]); INC(i)

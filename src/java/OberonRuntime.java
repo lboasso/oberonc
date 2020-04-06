@@ -65,28 +65,20 @@ public final class OberonRuntime {
   }
 
   public static int StrCmp(char[] s0, char[] s1) {
+    int cmp;
     int i = 0;
-    int j = 0;
-    int cmp = -1;
-    if(i < s0.length && j < s1.length) {
-      // this is safe, it will never overflow as cmp is an int (32 bits) and a
-      // s0, s1 are of type char(16 bits)
-      cmp = s0[i] - s1[j];
-      while(i < s0.length && j < s1.length &&
-        s0[i] != '\0' && s1[j] != '\0' &&
-        cmp == 0) {
-        cmp = s0[i] - s1[j];
-        i++;
-        j++;
-      }
-      if(cmp == 0) {
-        if(i < s0.length && j < s1.length) {
-          cmp = s0[i] - s1[j];
-        } else {
-          cmp = -1;
-        }
-      }
+    int len = Math.min(s0.length, s1.length);
+    while(i < len && s0[i] == s1[i] && s0[i] != '\0') {
+      i++;
     }
+    if(i < len) {
+      // this is safe, it will never overflow as cmp is an int (32 bits) and
+      // s0, s1 are of type char (16 bits)
+      cmp = s0[i] - s1[i];
+    } else {
+      cmp = s0.length - s1.length;
+    }
+
     return cmp;
   }
 

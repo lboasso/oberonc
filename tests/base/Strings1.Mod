@@ -1,8 +1,6 @@
 MODULE Strings1;
   CONST y = "A";
-  VAR a,b : ARRAY 10 OF CHAR;
-      c : ARRAY 0 OF CHAR;
-      d, e : ARRAY 2 OF CHAR;
+  VAR a: ARRAY 10 OF CHAR;
       x : CHAR;
       s0 : ARRAY 5 OF ARRAY 5 OF CHAR;
       s1 : ARRAY 5 OF CHAR;
@@ -28,6 +26,116 @@ MODULE Strings1;
     IF x <= y THEN WriteInt(-11) END;
     IF y <= x THEN WriteInt(-12) END;
   END Cmp;
+
+
+  PROCEDURE Comparisons;
+    VAR a, b : ARRAY 15 OF CHAR;
+        c : ARRAY 0 OF CHAR;
+
+    PROCEDURE replace0x(VAR str: ARRAY OF CHAR);
+      VAR i: INTEGER;
+          found: BOOLEAN;
+    BEGIN
+      found := FALSE;
+      FOR i := 0 TO LEN(str)-1 DO
+        IF (str[i] = 0X) OR found THEN
+          str[i] := "X";
+          found := TRUE
+        END;
+      END;
+    END replace0x;
+  BEGIN
+    a := "Hello";
+    b := "World";
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    b := "Hello";
+    Cmp(a, b);
+    WriteLn;
+
+    a := "HelloWorld";
+    b := "Hello";
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    b := "HelloWorld";
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    b := "";
+    Cmp(a, b);
+    WriteLn;
+
+    a := "";
+    b := "Hello";
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    Cmp(a, c);
+    WriteLn;
+
+    a := "Hello";
+    Cmp(c, a);
+    WriteLn;
+
+    a := "Hello";
+    b := "World";
+    replace0x(a);
+    replace0x(b);
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    b := "Hello";
+    replace0x(a);
+    replace0x(b);
+    Cmp(a, b);
+    WriteLn;
+
+    a := "HelloWorld";
+    b := "Hello";
+    replace0x(a);
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    b := "HelloWorld";
+    replace0x(a);
+    replace0x(b);
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    b := "";
+    replace0x(a);
+    Cmp(a, b);
+    WriteLn;
+
+    a := "";
+    b := "Hello";
+    replace0x(a);
+    replace0x(b);
+    Cmp(a, b);
+    WriteLn;
+
+    a := "Hello";
+    replace0x(a);
+    Cmp(a, c);
+    WriteLn;
+
+    a := "Hello";
+    replace0x(a);
+    Cmp(c, a);
+    WriteLn;
+
+
+  END Comparisons;
+
 BEGIN
   PrintMid("Hello");
   WriteLn;
@@ -51,21 +159,7 @@ BEGIN
   IF "Hello" <= a        THEN WriteInt(17) END;
   IF "HELL" = "HELLO"    THEN WriteInt(18) END;
   WriteLn;
-  a := "Hello";
-  b := "World";
-  Cmp(a, b);
-  WriteLn;
-  b := "Hello";
-  Cmp(a, b);
-  WriteLn;
-  b := "";
-  Cmp(a, b);
-  WriteLn;
-  Cmp(a, c);
-  WriteLn;
-  d[0] := "A"; d[1] := "B";
-  e[0] := "A"; e[1] := "D";
-  Cmp(d, e);
+  Comparisons;
   WriteLn;
   x := "A";
   IF x = "A" THEN WriteInt(1) END;
