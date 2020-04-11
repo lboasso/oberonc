@@ -42,7 +42,6 @@ public class TestRunner {
     check(tot, successful, failed, compileAndRunArgs("TestCmdLineArgs", "",
                                              new String[] {"Hello", "World!"}));
     testImports(tot, successful, failed);
-    testImportsWithOut(tot, successful, failed);
     testCyclicImports(tot, successful, failed);
     testWithInputs(tot, successful, failed);
     testTypeGuardExt(tot, successful, failed);
@@ -87,6 +86,8 @@ public class TestRunner {
       {"TestImport100"},
       {"TestImport120", "TestImport121", "TestImport122"},
       {"TestImport130", "TestImport131"},
+      {"TestImport140", "TestImport141", "TestImport142"},
+      {"TestImport150", "TestImport151"},
     };
 
     for(String[] test : suite) {
@@ -100,16 +101,6 @@ public class TestRunner {
     res1 = compile("TestImport111", false) == 0;
     res = compileAndRun("TestImport112");
     check(tot, successful, failed, res0 && res1 && res);
-  }
-
-  private static void testImportsWithOut(int[] tot, int[] successful,
-                                         int[] failed) {
-    check(tot, successful, failed, compile("TestImport140", true) == 0 &&
-                                   compile("TestImport141", true) == 0 &&
-                                   compileAndRun("TestImport142"));
-
-    check(tot, successful, failed, compile("TestImport150", true) == 0 &&
-                                   compileAndRun("TestImport151"));
   }
 
   private static void testCyclicImports(int[] tot, int[] successful,
@@ -170,6 +161,8 @@ public class TestRunner {
   private static boolean compileAndRunArgs(String name, String input,
                                            String[] argv) {
     boolean res;
+    InputStream org_in = System.in;
+    PrintStream org_out = System.out;
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(out);
@@ -196,6 +189,8 @@ public class TestRunner {
       System.err.println("---END---\n");
       res = false;
     }
+    System.setIn(org_in);
+    System.setOut(org_out);
     return res;
   }
 
