@@ -6,10 +6,10 @@
 
 (* Simple procedures to print to standard output *)
 DEFINITION Out;
-  PROCEDURE Char*(ch: CHAR);
-  PROCEDURE String*(str: ARRAY OF CHAR);
-  PROCEDURE Real*(x: REAL; n: INTEGER);
-  PROCEDURE Int*(x, n: INTEGER);
-  PROCEDURE Ln*;
-  PROCEDURE Hex*(x: INTEGER);
+  PROCEDURE Char(ch: CHAR);
+  PROCEDURE String(str: ARRAY OF CHAR);
+  PROCEDURE Real(x: REAL; n: INTEGER);
+  PROCEDURE Int(x, n: INTEGER);
+  PROCEDURE Ln;
+  PROCEDURE Hex(x: INTEGER);
 END Out.

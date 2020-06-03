@@ -10,6 +10,8 @@ public final class In {
 
   static public boolean Done;
   static private Scanner scanner;
+
+  // Ensure non-instantiability
   private In() {}
 
   static {

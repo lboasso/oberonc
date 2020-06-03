@@ -8,6 +8,9 @@ public final class Os {
 
   private static long date2010x01x01xUTC = 1262304000000L;
 
+  // Ensure non-instantiability
+  private Os() {}
+
   private static String toString(char[] name) {
     int i;
 
@@ -26,7 +29,7 @@ public final class Os {
         String s = System.getenv(toString(name));
         i = 0;
         if(s != null) {
-          i = Math.min(s.length(), out.length-1);
+          i = java.lang.Math.min(s.length(), out.length-1);
           System.arraycopy(s.toCharArray(), 0, out, 0, i);
         }
         out[i] = '\0';

@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 
 public final class Out {
 
+  // Ensure non-instantiability
   private Out() {}
 
   static {

@@ -7,7 +7,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-public class XYplane {
+public final class XYplane {
   public static final int erase = 0;
   public static final int draw = 1;
   public static int X, Y, W, H;
@@ -15,6 +15,9 @@ public class XYplane {
   private static Viewer viewer;
   private static final int white = Color.WHITE.getRGB();
   private static final int black = Color.BLACK.getRGB();
+
+  // Ensure non-instantiability
+  private XYplane() {}
 
   public static void Open() {
     W = 800;

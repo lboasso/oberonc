@@ -17,9 +17,9 @@
   discarded.
 *)
 DEFINITION In;
-  VAR Done*: BOOLEAN;
-  PROCEDURE Char*(VAR ch: CHAR);
-  PROCEDURE String*(VAR str: ARRAY OF CHAR);
-  PROCEDURE Real*(VAR x: REAL);
-  PROCEDURE Int*(VAR x: INTEGER);
+  VAR Done: BOOLEAN;
+  PROCEDURE Char(VAR ch: CHAR);
+  PROCEDURE String(VAR str: ARRAY OF CHAR);
+  PROCEDURE Real(VAR x: REAL);
+  PROCEDURE Int(VAR x: INTEGER);
 END In.

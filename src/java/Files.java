@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-public class Files {
+public final class Files {
   public static final int OK = 0;
   public static final int EOF = -1;
   public static final int IOERROR = -2;

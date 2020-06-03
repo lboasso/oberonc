@@ -3,10 +3,10 @@
 
 JAVA_SOURCES = src/java/Files_FileDesc.java src/java/Files.java \
                src/java/OberonRuntime.java src/java/Os.java src/java/Out.java \
-               src/java/In.java
+               src/java/In.java src/java/Math.java
 MOD_SOURCES = src/Out.Mod src/Os.Mod src/Files.Mod src/Strings.Mod src/OJS.Mod \
               src/CpCache.Mod src/Opcodes.Mod src/ClassFormat.Mod src/OJB.Mod \
-              src/OJG.Mod src/OJP.Mod src/oberonc.Mod src/In.Mod
+              src/OJG.Mod src/OJP.Mod src/oberonc.Mod src/In.Mod src/Math.Mod
 
 build:
 	mkdir -p out/
@@ -31,7 +31,7 @@ runFern:
 	mkdir -p examples/fern/out/
 	javac -cp $(OBERON_BIN) -d examples/fern/out examples/fern/java/*.java
 	java -cp $(OBERON_BIN) oberonc examples/fern/out \
-	  examples/fern/MathUtil.Mod examples/fern/RandomNumbers.Mod \
+	  examples/fern/RandomNumbers.Mod \
 	  examples/fern/XYplane.Mod examples/fern/IFS.Mod
 	java -cp $(OBERON_BIN):examples/fern/out IFS
 

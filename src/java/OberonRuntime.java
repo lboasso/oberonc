@@ -67,7 +67,7 @@ public final class OberonRuntime {
   public static int StrCmp(char[] s0, char[] s1) {
     int cmp;
     int i = 0;
-    int len = Math.min(s0.length, s1.length);
+    int len = java.lang.Math.min(s0.length, s1.length);
     while(i < len && s0[i] == s1[i] && s0[i] != '\0') {
       i++;
     }

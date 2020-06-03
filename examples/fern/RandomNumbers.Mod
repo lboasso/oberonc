@@ -1,5 +1,5 @@
 MODULE RandomNumbers;
-  IMPORT MathUtil;
+  IMPORT Math;
 
   VAR Z: INTEGER;
 
@@ -16,7 +16,7 @@ MODULE RandomNumbers;
 
   PROCEDURE Exp*(mu: REAL): REAL;
   BEGIN
-    RETURN -MathUtil.ln(Uniform())/mu
+    RETURN -Math.ln(Uniform())/mu
   END Exp;
 
   PROCEDURE InitSeed*(seed: INTEGER);
