@@ -123,7 +123,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   PROCEDURE FindObjFrom(modid: ARRAY OF CHAR; VAR x: OJG.Item): OJB.Object;
     VAR obj: OJB.Object;
   BEGIN
-    IF (x.mode = OJB.Var) OR (x.mode = OJB.ParStruct) THEN
+    IF (x.mode = OJB.Var) OR (x.mode = OJB.Par) OR (x.mode = OJB.ParStruct) THEN
       obj := OJB.FindObj(modid, x.modName, x.name)
     ELSE
       obj := NIL
@@ -931,7 +931,8 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
             obj.type := orgtype; obj.caseOrgType := NIL;
             TypeCase(obj, x)
           END ;
-          OJG.Fixup(x.a); OJG.Fixup(L0); obj.type := orgtype
+          OJG.Fixup(x.a); OJG.Fixup(L0); obj.type := orgtype;
+          obj.caseOrgType := NIL
         ELSIF (obj = NIL) & ((x.type.form = OJB.Pointer) OR
                              (x.type.form = OJB.Record)) THEN
           OJS.Mark("identifier expected")
