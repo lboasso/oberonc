@@ -2267,11 +2267,12 @@ MODULE OJG;
     END
   END Len;
 
-  PROCEDURE Argnum*;
+  PROCEDURE Argnum*(VAR x: Item);
   BEGIN
     ClassFormat.putFieldInsn(topCtx.m, Opcodes.GETSTATIC, topCtx.className,
                              "args", "[Ljava/lang/String;");
-    ClassFormat.putInsn(topCtx.m, Opcodes.ARRAYLENGTH)
+    ClassFormat.putInsn(topCtx.m, Opcodes.ARRAYLENGTH);
+    x.mode := Stack
   END Argnum;
 
   PROCEDURE Shift*(fct: INTEGER; VAR x, y: Item);

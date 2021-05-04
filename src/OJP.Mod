@@ -401,7 +401,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         END
       ELSIF fct = 21 THEN (*eot*) OJG.eot(x)
       ELSIF fct = 22 THEN (*ReadInt*) OJG.ReadInt(x)
-      ELSIF fct = 23 THEN (*ARGNUM*) OJG.Argnum
+      ELSIF fct = 23 THEN (*ARGNUM*) OJG.Argnum(x)
       END ;
       x.type := restyp
     ELSE OJS.Mark("wrong nof params")
@@ -763,7 +763,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         END ;
         Check(OJS.colon, ": expected");
         StatSequence;
-      ELSE OJS.Mark("integer of character expected")
+      ELSE OJS.Mark("integer or character expected")
       END
     END Case;
 
