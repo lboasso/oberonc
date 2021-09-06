@@ -7,6 +7,7 @@ JAVA_SOURCES = src/java/Files_FileDesc.java src/java/Files.java \
 MOD_SOURCES = src/Out.Mod src/Os.Mod src/Files.Mod src/Strings.Mod src/OJS.Mod \
               src/CpCache.Mod src/Opcodes.Mod src/ClassFormat.Mod src/OJB.Mod \
               src/OJG.Mod src/OJP.Mod src/oberonc.Mod src/In.Mod src/Math.Mod
+OBERON_BIN ?= bin
 
 build:
 	mkdir -p out/
