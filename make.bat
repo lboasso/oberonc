@@ -3,6 +3,7 @@
 set JAVA_SOURCES=src/java/Files_FileDesc.java src/java/Files.java src/java/OberonRuntime.java src/java/Os.java src/java/Out.java src/java/In.java src/java/Math.java
 set MOD_SOURCES=src/Out.Mod src/Os.Mod src/Files.Mod src/Strings.Mod src/OJS.Mod src/CpCache.Mod src/Opcodes.Mod src/ClassFormat.Mod src/OJB.Mod src/OJG.Mod src/OJP.Mod src/oberonc.Mod src/In.Mod src/Math.Mod
 
+set OBERON_BIN=./bin
 
 if "%~1"=="" goto build
 if "%~1"=="build" goto build

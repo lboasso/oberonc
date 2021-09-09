@@ -38,16 +38,17 @@ Intel i5 @ 2.80GHz (~ 100 ms with a hot VM).
 You can build the compiler on Linux or Windows, you need a JDK >= 1.8
 installed, with java and javac in the environment path.
 
-First of all, you need to set the OBERON_BIN environmental variable to the `bin`
-folder of the repository, for
-example on Linux `export OBERON_BIN=~/projects/oberonc/bin` or
-`set OBERON_BIN=C:\oberonc\bin` on Windows. Because you need an Oberon compiler
-to compile the sources in `src`, I have added to the repository the binaries of
-the compiler to perform the bootstrapping.
+Because you need an Oberon compiler to compile the sources in `src`, I have
+added to the repository the binaries of the compiler to perform the
+bootstrapping.
 
 By typing `make build` on the shell, the compiler will compile itself and
 write the files in the `out` folder. The `make bootstrap` command is equivalent
 to `make build`, but it overwrites the files in the `bin` folder.
+
+To run the compiler, you need to have the OBERON_BIN environmental variable set
+to the `bin` folder of the repository. This is taken care for you when
+using `make`.
 
 ## How to run the tests
 
@@ -68,8 +69,11 @@ should look like this:
 
 ## Using the compiler
 
-To use the compiler, you need to have the OBERON_BIN variable set to the `bin`
-folder of the repository. The command line syntax of `oberonc` is simple.
+To use the compiler, you need to have the OBERON_BIN environmental variable set
+to the `bin` folder of the repository, for example on Linux
+`export OBERON_BIN=~/oberonc/bin` or `set OBERON_BIN=C:\oberonc\bin`
+on Windows.
+The command line syntax of `oberonc` is simple.
 Let's compile examples/Hello.Mod:
 
     MODULE Hello;
