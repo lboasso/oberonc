@@ -373,9 +373,9 @@ MODULE OJS;
     prevLine := line;
     prevCol := col;
     REPEAT
-      WHILE ~EOF & (ch <= " ") DO read END;
+      WHILE ~EOF & ((ch <= " ") OR (ch > 7FX)) DO read END;
       IF EOF THEN sym := eot
-      ELSIF ch <= 7FX THEN
+      ELSE
         CASE ch OF (* " " < ch <= 7FX *)
           "!", "%", "'", "?", "@", "\", "_", "`": read; sym := null
           | 22X : String; sym := string
@@ -417,7 +417,6 @@ MODULE OJS;
           | "~" : read; sym := not
           | 7FX : read; sym := upto
         END
-      ELSE read; sym := null
       END
     UNTIL sym # null
   END Get;

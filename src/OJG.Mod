@@ -1935,7 +1935,7 @@ MODULE OJG;
     ELSE
       max := 0; lastLow := 0; nLables := 0;
     END ;
-    IF nLables < NofCases THEN
+    IF nLables <= NofCases THEN
       ClassFormat.FixLink(topCtx.m, L0);
       ClassFormat.putVarInsn(topCtx.m, Opcodes.ILOAD, caseExpr.a);
       dflt := dflt-topCtx.m.i;

@@ -15,6 +15,19 @@ MODULE CaseNum0;
     WriteInt(a)
   END P;
 
+  PROCEDURE P1;
+   VAR i: INTEGER;
+  BEGIN
+      i := 8;
+      CASE i OF
+       0..255: WriteInt(8)
+      END;
+      i := 0;
+      CASE i OF
+       -255..0: WriteInt(9)
+      END
+  END P1;
+
   PROCEDURE P2;
    VAR i: INTEGER;
   BEGIN
@@ -23,7 +36,7 @@ MODULE CaseNum0;
        -1: WriteInt(-1)
        | 0: WriteInt(0)
        | +1: WriteInt(1)
-    END
+      END
   END P2;
 
 BEGIN
@@ -40,5 +53,6 @@ BEGIN
   P(9); (* 1 *)
   P(4); (* 2 *)
   P(6); (* 3 *)
-  P2 (* -1 *)
+  P2; (* -1 *)
+  P1 (* 8 9 *)
 END CaseNum0.
