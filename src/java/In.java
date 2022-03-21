@@ -44,7 +44,7 @@ public final class In {
       line = scanner.nextLine().toCharArray();
       ldest = str.length - 1;
       lsrc = line.length;
-      if(ldest > 0 && lsrc > 0) {
+      if(ldest > 0) {
         i = 0;
         while(i < ldest && i < lsrc && line[i] != '\0') {
           str[i] = line[i];
