@@ -567,46 +567,38 @@ MODULE ClassFormat;
   BEGIN
     CASE opcode OF
       Opcodes.AALOAD, Opcodes.ASTORE, Opcodes.ATHROW, Opcodes.BALOAD,
-      Opcodes.CALOAD, Opcodes.DADD, Opcodes.DALOAD, Opcodes.DCMPG,
-      Opcodes.DCMPL, Opcodes.DDIV, Opcodes.DMUL, Opcodes.DREM, Opcodes.DSTORE,
-      Opcodes.DSUB, Opcodes.FADD, Opcodes.FALOAD, Opcodes.FCMPG, Opcodes.FCMPL,
-      Opcodes.FDIV, Opcodes.FMUL, Opcodes.FREM, Opcodes.FSTORE, Opcodes.FSUB,
-      Opcodes.IADD, Opcodes.IALOAD, Opcodes.IAND, Opcodes.IDIV, Opcodes.IFEQ,
-      Opcodes.IFGE, Opcodes.IFGT, Opcodes.IFLE, Opcodes.IFLT, Opcodes.IFNE,
-      Opcodes.IFNONNULL, Opcodes.IFNULL, Opcodes.IMUL, Opcodes.IOR,
-      Opcodes.IREM, Opcodes.ISHL, Opcodes.ISHR, Opcodes.ISTORE, Opcodes.ISUB,
-      Opcodes.IUSHR, Opcodes.IXOR, Opcodes.LADD, Opcodes.LALOAD, Opcodes.LAND,
-      Opcodes.LCMP, Opcodes.LDIV, Opcodes.LMUL, Opcodes.LOOKUPSWITCH,
-      Opcodes.LOR, Opcodes.LREM, Opcodes.LSHL, Opcodes.LSHR, Opcodes.LSTORE,
-      Opcodes.LSUB, Opcodes.LUSHR, Opcodes.LXOR, Opcodes.MONITORENTER,
-      Opcodes.MONITOREXIT, Opcodes.POP, Opcodes.PUTSTATIC, Opcodes.SALOAD,
-      Opcodes.TABLESWITCH:
+      Opcodes.CALOAD, Opcodes.D2I, Opcodes.FADD, Opcodes.FALOAD,
+      Opcodes.FCMPG, Opcodes.FCMPL,  Opcodes.FDIV, Opcodes.FMUL,
+      Opcodes.FSTORE, Opcodes.FSUB, Opcodes.IADD, Opcodes.IALOAD,
+      Opcodes.IAND, Opcodes.IFEQ, Opcodes.IFGE, Opcodes.IFGT,
+      Opcodes.IFLE, Opcodes.IFLT, Opcodes.IFNE, Opcodes.IFNONNULL,
+      Opcodes.IFNULL, Opcodes.IMUL, Opcodes.IOR, Opcodes.ISHL,
+      Opcodes.ISHR, Opcodes.ISTORE, Opcodes.ISUB, Opcodes.IXOR,
+      Opcodes.POP, Opcodes.PUTSTATIC, Opcodes.TABLESWITCH:
         INC(mi.curStack, -1)
     | Opcodes.IFACMPEQ, Opcodes.IFACMPNE, Opcodes.IFICMPEQ,
       Opcodes.IFICMPGE, Opcodes.IFICMPGT, Opcodes.IFICMPLE,
-      Opcodes.IFICMPLT, Opcodes.IFICMPNE, Opcodes.POP2, Opcodes.PUTFIELD:
+      Opcodes.IFICMPLT, Opcodes.IFICMPNE, Opcodes.POP2,
+      Opcodes.PUTFIELD:
         INC(mi.curStack, -2)
-    | Opcodes.AASTORE, Opcodes.BASTORE, Opcodes.CASTORE, Opcodes.DASTORE,
-      Opcodes.FASTORE, Opcodes.IASTORE, Opcodes.LASTORE, Opcodes.SASTORE:
+    | Opcodes.AASTORE, Opcodes.BASTORE, Opcodes.CASTORE,
+      Opcodes.FASTORE, Opcodes.IASTORE:
         INC(mi.curStack, -3)
-    | Opcodes.DUP2, Opcodes.DUP2X1, Opcodes.DUP2X2:
+    | Opcodes.DUP2:
         INC(mi.curStack, 2)
-    | Opcodes.ACONSTNULL, Opcodes.ALOAD, Opcodes.BIPUSH, Opcodes.DCONST0,
-      Opcodes.DCONST1, Opcodes.DLOAD, Opcodes.DUP, Opcodes.DUPX1,
-      Opcodes.DUPX2, Opcodes.FCONST0, Opcodes.FCONST1, Opcodes.FCONST2,
-      Opcodes.FLOAD, Opcodes.GETSTATIC, Opcodes.ICONSTM1, Opcodes.ICONST0,
-      Opcodes.ICONST1, Opcodes.ICONST2, Opcodes.ICONST3, Opcodes.ICONST4,
-      Opcodes.ICONST5, Opcodes.ILOAD, Opcodes.JSR, Opcodes.LCONST0,
-      Opcodes.LCONST1, Opcodes.LDC, Opcodes.LLOAD, Opcodes.NEW, Opcodes.SIPUSH:
+    | Opcodes.ACONSTNULL, Opcodes.ALOAD, Opcodes.BIPUSH,
+      Opcodes.DUP, Opcodes.F2D, Opcodes.FCONST0, Opcodes.FCONST1,
+      Opcodes.FCONST2, Opcodes.FLOAD, Opcodes.GETSTATIC,
+      Opcodes.ICONSTM1, Opcodes.ICONST0, Opcodes.ICONST1,
+      Opcodes.ICONST2, Opcodes.ICONST3, Opcodes.ICONST4,
+      Opcodes.ICONST5, Opcodes.ILOAD, Opcodes.LDC, Opcodes.NEW,
+      Opcodes.SIPUSH:
         INC(mi.curStack, 1)
     | Opcodes.ANEWARRAY, Opcodes.ARETURN, Opcodes.ARRAYLENGTH,
-      Opcodes.CHECKCAST, Opcodes.D2F, Opcodes.D2I, Opcodes.D2L, Opcodes.DNEG,
-      Opcodes.DRETURN, Opcodes.F2D, Opcodes.F2I, Opcodes.F2L, Opcodes.FNEG,
-      Opcodes.FRETURN, Opcodes.GETFIELD, Opcodes.GOTO, Opcodes.I2B, Opcodes.I2C,
-      Opcodes.I2D, Opcodes.I2F, Opcodes.I2L, Opcodes.I2S, Opcodes.IINC,
-      Opcodes.INEG, Opcodes.INSTANCEOF, Opcodes.IRETURN, Opcodes.L2D,
-      Opcodes.L2F, Opcodes.L2I, Opcodes.LNEG, Opcodes.LRETURN, Opcodes.NEWARRAY,
-      Opcodes.NOP, Opcodes.RET, Opcodes.RETURNx, Opcodes.SWAP, Opcodes.WIDE:
+      Opcodes.CHECKCAST, Opcodes.FNEG,  Opcodes.FRETURN,
+      Opcodes.GETFIELD, Opcodes.GOTO, Opcodes.I2F, Opcodes.IINC,
+      Opcodes.INEG, Opcodes.INSTANCEOF, Opcodes.IRETURN,
+      Opcodes.NEWARRAY, Opcodes.RETURNx, Opcodes.SWAP:
         (* nothing to do *)
     END;
     setMaxStack(mi)

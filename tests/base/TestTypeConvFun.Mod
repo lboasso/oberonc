@@ -5,7 +5,13 @@ MODULE TestTypeConvFun;
       c : CHAR;
       b : BOOLEAN;
       s : SET;
-   
+
+  PROCEDURE stackSize(r: REAL);
+    VAR i: INTEGER;
+  BEGIN
+    i := FLOOR(r)
+  END stackSize;
+
 BEGIN
   x := 8.9;
   y := 6;
