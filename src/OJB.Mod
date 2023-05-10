@@ -92,7 +92,7 @@ MODULE OJB;
       NEW(new); new.name := id;
       new.class := class; new.next := NIL; new.rdo := FALSE; new.dsc := NIL;
       new.modref := -1; (*un-marked*); new.lev := 0; new.len := 0; new.val := 0;
-      new.expo := FALSE; new.type := NIL; new.recordType := NIL;
+      new.expo := FALSE; new.type := noType; new.recordType := NIL;
       new.caseOrgType := NIL; new.used := FALSE;
       x.next := new; obj := new
     ELSE obj := x.next; OJS.Mark("mult def")
