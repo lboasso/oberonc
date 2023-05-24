@@ -86,7 +86,6 @@ MODULE TestINC0;
     INC(b[x+1]);
     WriteInt(b[x+1]); (* 11 *)
     
-    (*INC(i[0], x+1); INC's second argument must be a constant or simple variable *)
     i[0] := 2; i[1] := 3;
     INC(i[0], 7);
     WriteInt(i[0]); (* 9 *)
@@ -109,7 +108,59 @@ MODULE TestINC0;
     DEC(x, -1);
     WriteInt(x); (* 4 *)
   END P3; 
-  
+
+  PROCEDURE P4(VAR a0 : INTEGER; VAR a1 : ARRAY OF INTEGER);
+    VAR i : ARRAY 2 OF INTEGER;
+        j : RECORD x : INTEGER END;
+        x, r : INTEGER;
+        b : ARRAY 2 OF BYTE;
+  BEGIN
+    x := 0;
+    r := 0;
+    i[0] := 2; i[1] := 3;
+
+    INC(r, i[0]);
+    WriteInt(r); (* 2 *)
+    INC(r, i[x+1]);
+    WriteInt(r); (* 5 *)
+
+    j.x := 3;
+
+    INC(r, j.x);
+    WriteInt(r); (* 8 *)
+    INC(r, a0);
+    WriteInt(r); (* 9 *)
+
+    x := 0;
+
+    INC(r, a1[x+1]);
+    WriteInt(r); (* 12 *)
+    INC(r, ig[0]);
+    WriteInt(r); (* 14 *)
+    INC(r, ig[x+1]);
+    WriteInt(r); (* 17 *)
+
+    xg := 0;
+
+    INC(r, ig[xg+1]);
+    WriteInt(r); (* 20 *)
+
+    jg.x := 6;
+
+    INC(r, jg.x);
+    WriteInt(r); (* 26 *)
+    INC(r, a1[xg+1]);
+    WriteInt(r); (* 29 *)
+
+    b[1] := 10;
+
+    INC(r, b[x+1]);
+    WriteInt(r); (* 39 *)
+    INC(r, 1+b[x+1]);
+    WriteInt(r); (* 50 *)
+    INC(r, b[x+1]+1);
+    WriteInt(r); (* 61 *)
+  END P4;
 BEGIN
  xg := 1;
  yg := 0;
@@ -119,5 +170,9 @@ BEGIN
  WriteLn;
  xg := 1;
  ig[0] := 2; ig[1] := 3;
- P3(xg, ig)
+ P3(xg, ig);
+ WriteLn;
+ xg := 1;
+ ig[0] := 2; ig[1] := 3;
+ P4(xg, ig)
 END TestINC0.
