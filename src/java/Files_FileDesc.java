@@ -1,5 +1,5 @@
 /*
-  Copyright 2017 Luca Boasso. All rights reserved.
+  Copyright 2017 Luca Boasso.
   Use of this source code is governed by a MIT
   license that can be found in the LICENSE file.
 */

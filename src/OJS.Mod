@@ -1,5 +1,7 @@
 (*
-  Copyright 2017 Luca Boasso. All rights reserved.
+  Copyright 2017 Luca Boasso.
+  Copyright (C)2013 Niklaus Wirth (NW), Juerg Gutknecht (JG),
+  Paul Reed (PR/PDR).
   Use of this source code is governed by a MIT
   license that can be found in the LICENSE file.
 *)
