@@ -122,6 +122,15 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
     RETURN expo
   END CheckExport;
 
+  PROCEDURE OrigFormalParamType(param: OJB.Object): OJB.Type;
+    VAR partype: OJB.Type;
+  BEGIN
+    IF param.caseOrgType # NIL THEN partype := param.caseOrgType
+    ELSE partype := param.type
+    END
+    RETURN partype
+  END OrigFormalParamType;
+
   PROCEDURE FindObjFrom(modid: ARRAY OF CHAR; VAR x: OJG.Item): OJB.Object;
     VAR obj: OJB.Object;
   BEGIN
@@ -246,7 +255,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       WHILE p0 # NIL DO
         (* Type Rule C.3, C.4 *)
         IF (p0.class = p1.class) & (p0.rdo = p1.rdo) &
-           EqualTypes(p0.type, p1.type)
+           EqualTypes(OrigFormalParamType(p0), OrigFormalParamType(p1))
         THEN p0 := p0.next; p1 := p1.next
         ELSE p0 := NIL; com := FALSE
         END
@@ -269,13 +278,14 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   END CompTypes;
 
   PROCEDURE Parameter(par: OJB.Object);
-    VAR x: OJG.Item; varpar: BOOLEAN;
+    VAR x: OJG.Item; varpar: BOOLEAN; partype: OJB.Type;
   BEGIN
     expression(x);
     IF par # NIL THEN
+      partype := OrigFormalParamType(par);
       varpar := (par.class = OJB.Par) OR (par.class = OJB.ParStruct);
-      IF CompTypes(par.type, x.type, varpar) OR    (* Type Rule G.1, G.2, G.3 *)
-         CompatibleOpenArrays(x.type, par.type) THEN (* Type Rule F.1, F.2 *)
+      IF CompTypes(partype, x.type, varpar) OR    (* Type Rule G.1, G.2, G.3 *)
+         CompatibleOpenArrays(x.type, partype) THEN (* Type Rule F.1, F.2 *)
         IF varpar & x.rdo THEN OJS.Mark("read only actual parameter")
         ELSIF ~varpar OR (par.class = OJB.ParStruct) THEN
           IF x.mode = OJB.Typ THEN OJS.Mark("illegal value parameter") END ;
@@ -285,13 +295,13 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           OJG.VarParam(x)
         END
       (* Type Rule F.3  *)
-      ELSIF (x.type.form = OJB.String) & par.rdo & (par.type.form = OJB.Array) &
-            (par.type.base.form = OJB.Char) & (par.type.len < 0) THEN
+      ELSIF (x.type.form = OJB.String) & par.rdo & (partype.form = OJB.Array) &
+            (partype.base.form = OJB.Char) & (partype.len < 0) THEN
         OJG.StringParam(x)
       (* Type Rule F.3, J *)
       ELSIF (x.type.form = OJB.Char) & x.rdo & par.rdo &
-            (par.type.form = OJB.Array) & (par.type.base.form = OJB.Char) &
-            (par.type.len < 0) THEN
+            (partype.form = OJB.Array) & (partype.base.form = OJB.Char) &
+            (partype.len < 0) THEN
         OJG.CharToStr(x);
         OJG.StringParam(x)
       (*
@@ -300,12 +310,12 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
            P(b)     STR overwrites bytes around byte variable b
       *)
       (* Type Rule I, G.2 *) (*BYTE*)
-      ELSIF ~varpar & (par.type.form = OJB.Int) & (x.type.form = OJB.Int) THEN
-        IF par.type = OJB.byteType THEN CheckByteRange(x) END;
+      ELSIF ~varpar & (partype.form = OJB.Int) & (x.type.form = OJB.Int) THEN
+        IF partype = OJB.byteType THEN CheckByteRange(x) END;
         OJG.ValueParam(x)
       (* Type Rule J, G.2 *)
       ELSIF (x.type.form = OJB.String) & (x.b = 2) & (par.class = OJB.Var) &
-            (par.type.form = OJB.Char) THEN
+            (partype.form = OJB.Char) THEN
         OJG.StrToChar(x);
         OJG.ValueParam(x)
       ELSE OJS.Mark("incompatible parameters")
