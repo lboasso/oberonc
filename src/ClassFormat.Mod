@@ -13,6 +13,7 @@ MODULE ClassFormat;
   IMPORT Strings, Files, CpCache, Opcodes, OJS;
 
   CONST
+    nestedIdLen* = 5;
     CpMax = 10000H;
     DescLenMax = 500;
     FieldsMax = CpMax;
@@ -48,7 +49,7 @@ MODULE ClassFormat;
     MethodInfoDesc = RECORD
       cf: CF;
       access: INTEGER;
-      name: ARRAY OJS.IdLen OF CHAR;
+      name: ARRAY OJS.IdLen + nestedIdLen OF CHAR;
       descriptor: ARRAY DescLenMax OF CHAR;
       code: ARRAY CodeMax OF BYTE;
       i*: INTEGER;

@@ -23,6 +23,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
 
   VAR sym: INTEGER;   (*last symbol read*)
     level: INTEGER;
+    nestedIdCounter: INTEGER; (*unique id for each nested procedure/type*)
     newSF, isDefinition: BOOLEAN;
     expression: PROCEDURE (VAR x: OJG.Item);  (*to avoid forward reference*)
     Type: PROCEDURE (typedef: BOOLEAN): OJB.Type;
@@ -1033,7 +1034,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         obj0 := obj;
         WHILE (obj0 # NIL) & (obj0.name # OJS.id) DO obj0 := obj0.next END ;
         IF obj0 # NIL THEN OJS.Mark("mult def") END ;
-        NEW(new); Strings.Copy(OJS.id, new.name);
+        NEW(new); Strings.Copy(OJS.id, new.name); new.nestedId := 0;
         new.class := OJB.Fld; new.recordType := typ;
         new.next := obj; obj := new;
         OJS.Get(sym); new.expo := CheckExport();
@@ -1185,7 +1186,11 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           (* Temporarily save base type name (needed by OJG.internalName despite
              forward references are not fixed yet) *)
           NEW(type.base); type.base.form := OJB.Int; NEW(tmp);
-          Strings.Copy(ptbase.name, tmp.name); type.base.typobj := tmp
+          Strings.Copy(ptbase.name, tmp.name);
+          IF level > 0 THEN
+            tmp.nestedId := nestedIdCounter; INC(nestedIdCounter)
+          END ;
+          type.base.typobj := tmp
         END
       ELSE type.base := Type(FALSE);
         IF type.base.form # OJB.Record THEN
@@ -1241,6 +1246,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
         tp := Type(TRUE);
         obj := OJB.InsertObj(id, OJB.Typ); obj.type := tp; obj.expo := expo;
         obj.lev := level;
+        IF level > 0 THEN
+          obj.nestedId := nestedIdCounter; INC(nestedIdCounter)
+        END ;
         IF tp.typobj = NIL THEN
           (*aliases must not modify the typobj*)
           tp.typobj := obj
@@ -1251,13 +1259,20 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
           (*check whether this is base of a pointer type; search and fixup*)
           ptbase := pbsList;
           WHILE ptbase # NIL DO
-            IF obj.name = ptbase.name THEN ptbase.type.base := obj.type END ;
+            IF obj.name = ptbase.name THEN
+              (*
+                Keep the nestedId computed when the tmp base object type was
+                created
+              *)
+              obj.type.typobj.nestedId := ptbase.type.base.typobj.nestedId;
+              ptbase.type.base := obj.type
+            END ;
             ptbase := ptbase.next
           END ;
         END ;
         Check(OJS.semicolon, "; missing");
-        IF (obj.type.form = OJB.Record) & ~alias THEN
-          IF ~isDefinition THEN OJG.MakeRecordType(obj) END
+        IF (obj.type.form = OJB.Record) & ~alias & ~isDefinition THEN
+          OJG.MakeRecordType(obj)
         END
       END
     END ;
@@ -1299,6 +1314,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       Strings.Copy(OJS.id, procid); OJS.Get(sym);
       proc := OJB.InsertObj(OJS.id, OJB.Const); proc.lev := level; parblksize := 0;
       NEW(type); type.form := OJB.Proc; proc.type := type;
+      IF level > 0 THEN
+        proc.nestedId := nestedIdCounter; INC(nestedIdCounter)
+      END ;
       proc.expo := CheckExport();
       OJB.OpenScope; INC(level); proc.val := 0; type.base := OJB.noType;
       parblksize := ProcedureType(type, parblksize);  (*formal parameter list*)
@@ -1379,6 +1397,7 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
   BEGIN
     isDefinition := FALSE;
     hasMain := FALSE;
+    nestedIdCounter := 1;
     OJS.Get(sym);
     IF (sym = OJS.module) OR (sym = OJS.definition) THEN
       IF sym = OJS.definition THEN isDefinition := TRUE END ;

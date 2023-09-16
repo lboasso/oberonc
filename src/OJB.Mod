@@ -44,6 +44,13 @@ MODULE OJB;
       type*: Type;
       recordType*, caseOrgType*: Type; (* computed, not serialized *)
       name*: OJS.Ident;
+      (*
+        Nested procedures and types (lev > 1, expo = FALSE) must have an unique
+        bytecode name, as the nesting is flattened during code generation.
+        nestedId is an unique integer that is appended to name in the bytecode.
+        A valid nestedId is >= 1.
+      *)
+      nestedId*: INTEGER;
       val*, len*: INTEGER
     END ;
 
@@ -89,7 +96,7 @@ MODULE OJB;
   BEGIN x := topScope;
     WHILE (x.next # NIL) & (x.next.name # id) DO x := x.next END ;
     IF x.next = NIL THEN
-      NEW(new); new.name := id;
+      NEW(new); new.name := id; new.nestedId := 0;
       new.class := class; new.next := NIL; new.rdo := FALSE; new.dsc := NIL;
       new.modref := -1; (*un-marked*); new.lev := 0; new.len := 0; new.val := 0;
       new.expo := FALSE; new.type := noType; new.recordType := NIL;

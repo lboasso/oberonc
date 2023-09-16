@@ -19,7 +19,7 @@ MODULE OJG;
       type*, oldType*: OJB.Type;
       a*, b*, r: INTEGER;
       rdo*: BOOLEAN;  (*read only*)
-      name*: OJS.Ident;
+      name*: ARRAY OJS.IdLen + ClassFormat.nestedIdLen OF CHAR;
       modName*: OJS.Ident;
       recordName: ClassFormat.Descriptor
     END ;
@@ -131,12 +131,18 @@ MODULE OJG;
       mod := OJB.GetModFrom(type.typobj);
       i := Strings.Write(mod.name, out, i);
       i := Strings.WriteChar("_", out, i);
-      i := Strings.Write(type.typobj.name, out, i)
+      i := Strings.Write(type.typobj.name, out, i);
+      IF type.typobj.nestedId > 0 THEN
+        i := Strings.WriteInt(type.typobj.nestedId, 0, out, i)
+      END
     ELSIF type.form = OJB.Pointer THEN
       mod := OJB.GetModFrom(type.base.typobj);
       i := Strings.Write(mod.name, out, i);
       i := Strings.WriteChar("_", out, i);
-      i := Strings.Write(type.base.typobj.name, out, i)
+      i := Strings.Write(type.base.typobj.name, out, i);
+      IF type.base.typobj.nestedId > 0 THEN
+        i := Strings.WriteInt(type.base.typobj.nestedId, 0, out, i)
+      END
     ELSIF type.form = OJB.Proc THEN
       i := normalize(type.signature, out, i)
     END
@@ -956,6 +962,9 @@ MODULE OJG;
   BEGIN
     x.mode := y.class; x.type := y.type; x.a := y.val;  x.rdo := y.rdo;
     Strings.Copy(y.name, x.name);
+    IF y.nestedId > 0 THEN
+      Strings.AppendInt(y.nestedId, 0, x.name)
+    END ;
     x.oldType := y.caseOrgType;
     IF (y.class = OJB.Const) & (y.type.form = OJB.String) THEN
       x.b := y.len
@@ -1988,10 +1997,18 @@ MODULE OJG;
 
   PROCEDURE Enter*(proc: OJB.Object; locblksize: INTEGER);
     VAR acc: INTEGER;
+      nestedName: ARRAY OJS.IdLen + ClassFormat.nestedIdLen OF CHAR;
   BEGIN
     acc := Opcodes.ACCxSTATIC + Opcodes.ACCxPUBLIC + Opcodes.ACCxFINAL;
-    topCtx.m := ClassFormat.NewMI(topCtx.c, acc, proc.name,
-                                  proc.type.signature);
+    IF proc.nestedId > 0 THEN
+      Strings.Copy(proc.name, nestedName);
+      Strings.AppendInt(proc.nestedId, 0, nestedName);
+      topCtx.m := ClassFormat.NewMI(topCtx.c, acc, nestedName,
+                                    proc.type.signature)
+    ELSE
+      topCtx.m := ClassFormat.NewMI(topCtx.c, acc, proc.name,
+                                    proc.type.signature)
+    END;
     clearCtx(topCtx);
     initializeScope(getLocalVars(proc.type.dsc, proc.type.nofpar), locblksize)
   END Enter;

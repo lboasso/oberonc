@@ -30,7 +30,8 @@ public class TestRunner {
       "TestFor1", "Out1", "TestAssert", "CaseChar0", "Out6", "TestSystemVal",
       "TestNestedProcs", "Pattern1", "TestStringsMod", "OutTest",
       "ProcVariables7", "RecordAssignment2", "RecordParam", "CaseRecord3",
-      "VarParGuard", "TestTypeTest", "TestConstFunc", "TestMath", "CaseRecord4"
+      "VarParGuard", "TestTypeTest", "TestConstFunc", "TestMath", "CaseRecord4",
+      "UniqueTypeAndProcNames"
     };
     successful[0] = 0;
     failed[0] = 0;
@@ -47,8 +48,6 @@ public class TestRunner {
     testTypeGuardExt(tot, successful, failed);
     check(tot, successful, failed,
           compileAndFail("TestReadOnlyPar", 3, "read only"));
-    check(tot, successful, failed,
-          compileAndFail("UniqueTypeAndProcNames", 3, "must be unique"));
     check(tot, successful, failed,
           compileAndFail("ArrayConstantSize", 2, "not a valid length"));
     check(tot, successful, failed,
