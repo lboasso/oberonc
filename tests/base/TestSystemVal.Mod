@@ -15,8 +15,25 @@ IMPORT SYSTEM;
     r: REAL;
     p0: pR0;
     p1, p: pR1;
+    byte, byte1: BYTE;
 
 BEGIN
+
+  (* converting INTEGER to BYTE and vice versa *)
+  c := 257;
+  byte := SYSTEM.VAL(BYTE, c);
+  WriteInt(byte); (* 1 *)
+  byte := 8;
+  c := SYSTEM.VAL(INTEGER, byte);
+  WriteInt(c); (* 8 *)
+
+  c := 257;
+  i := SYSTEM.VAL(INTEGER, c);
+  WriteInt(i); (* 257 *)
+  byte := 8;
+  byte1 := SYSTEM.VAL(BYTE, byte);
+  WriteInt(byte1); (* 8 *)
+  WriteLn;
 
   (* converting SET to INTEGER and vice versa *)
 

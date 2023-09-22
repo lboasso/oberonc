@@ -394,8 +394,17 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       ELSIF fct = 15 THEN (*NOT*) CheckInt(x); OJG.Bnot(x)
       ELSIF fct = 16 THEN (*VAL*)
         IF x.mode = OJB.Typ THEN
-          IF ((x.type.form = OJB.Int) OR (x.type.form = OJB.Set)) &
-             ((y.type.form = OJB.Int) OR (y.type.form = OJB.Set)) THEN
+          IF ((x.type = OJB.byteType) OR (x.type = OJB.intType)) &
+            ((y.type = OJB.byteType) OR (y.type = OJB.intType)) THEN
+            (*
+              BYTE and INTEGER are compatible, this is a no-op.
+              The resulting type must match the one of the expression to be
+              converted, as the actual conversion happens elsewhere.
+            *)
+            restyp := y.type;
+          ELSIF ((x.type = OJB.intType) OR (x.type.form = OJB.Set)) &
+            ((y.type = OJB.intType) OR (y.type.form = OJB.Set)) THEN
+            (* A SET is represented as an INTEGER, this is a no-op. *)
             restyp := x.type
           ELSIF (x.type.form = OJB.Real) & (y.type.form = OJB.Int) THEN
             OJG.IntToReal(y);
