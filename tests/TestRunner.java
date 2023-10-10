@@ -31,7 +31,7 @@ public class TestRunner {
       "TestNestedProcs", "Pattern1", "TestStringsMod", "OutTest",
       "ProcVariables7", "RecordAssignment2", "RecordParam", "CaseRecord3",
       "VarParGuard", "TestTypeTest", "TestConstFunc", "TestMath", "CaseRecord4",
-      "UniqueTypeAndProcNames"
+      "UniqueTypeAndProcNames", "ForwardPointerRef"
     };
     successful[0] = 0;
     failed[0] = 0;
