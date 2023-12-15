@@ -36,7 +36,9 @@ IMPORT OJS, OJP, Out, Strings;
         IF arg[len-1] = "+" THEN
           newSym := TRUE;
           arg[len-1] := 0X
-        END ;
+	ELSE
+	  newSym := FALSE
+        END;
         OJP.Compile(arg, newSym, folder)
       END
     END
