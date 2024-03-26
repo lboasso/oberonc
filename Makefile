@@ -8,12 +8,13 @@ MOD_SOURCES = src/Out.Mod src/Os.Mod src/Files.Mod src/Strings.Mod src/OJS.Mod \
               src/CpCache.Mod src/Opcodes.Mod src/ClassFormat.Mod src/OJB.Mod \
               src/OJG.Mod src/OJP.Mod src/oberonc.Mod src/In.Mod src/Math.Mod
 
-OBERON_BIN = ./bin
+OBERON_BIN = ./bin:./bin/ob.jar
 
 build:
 	mkdir -p out/
 	javac -d out $(JAVA_SOURCES)
-	OBERON_BIN=${OBERON_BIN} java -cp $(OBERON_BIN) oberonc out $(MOD_SOURCES)
+	bin/oc out $(MOD_SOURCES)
+	cd out && jar cf ob.jar *.class && rm *.class
 
 bootstrap:
 	javac -d bin $(JAVA_SOURCES)

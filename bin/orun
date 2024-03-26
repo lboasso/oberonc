@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export OBERON_BIN="$(dirname "$0")"
+#echo "OBERON_BIN=$OBERON_BIN"
+java -cp "$OBERON_BIN/ob.jar":. "$@"

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+OBERON_BIN="$(dirname "$0")"
+$OBERON_BIN/orun oberonc "$@"
