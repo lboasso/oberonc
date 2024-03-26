@@ -443,30 +443,34 @@ public final class Files {
     return i;
   }
 
-  public static int Seek(Files_FileDesc file, int pos) {
-    int r;
-    r = OK;
+  public static int Seek(Files_FileDesc file, long pos) {
+    file.err = OK;
     try {
       file.f.seek(pos);
-      if(file.err == EOF) {
-        file.err = OK;
-      }
     } catch(IOException e) {
-      r = IOERROR;
+      file.err = IOERROR;
     }
-    return r;
+    return file.err;
   }
 
-  public static int Size(Files_FileDesc file) {
-    int len;
-    len = -1;
+  public static long Pos(Files_FileDesc file) {
+    file.err = OK;
+    try {
+      return file.f.getFilePointer();
+    } catch(IOException e) {
+      file.err = IOERROR;
+    }
+    return -1;
+  }
+
+  public static long Length(Files_FileDesc file) {
     if(file.err == OK) {
       try {
-        len = (int) file.f.length();
+        return file.f.length();
       } catch(IOException e) {
         file.err = IOERROR;
       }
     }
-    return len;
+    return -1;
   }
 }

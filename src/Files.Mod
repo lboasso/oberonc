@@ -42,6 +42,7 @@ DEFINITION Files;
   PROCEDURE Rename(from, to: ARRAY OF CHAR): INTEGER;
   PROCEDURE Exists(name: ARRAY OF CHAR): BOOLEAN;
   PROCEDURE Delete(name: ARRAY OF CHAR): INTEGER;
-  PROCEDURE Seek(file: File; pos: INTEGER): INTEGER;
-  PROCEDURE Size(file: File): INTEGER;
+  PROCEDURE Seek(file: File; pos: LONGINT): INTEGER;
+  PROCEDURE Pos(file: File): LONGINT;
+  PROCEDURE Length(file: File): INTEGER;
 END Files.
