@@ -557,7 +557,7 @@ MODULE OJB;
         END ;
         obj := obj.next;
       END ;
-      len := Files.Size(f);
+      len := Files.Length(f);
       IF len # -1 THEN
         REPEAT Files.WriteNum(f, 0); INC(len) UNTIL len MOD 4 = 0;
       END ;

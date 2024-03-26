@@ -434,7 +434,7 @@ MODULE OJS;
     IF f = NIL THEN
       Mark("file not found")
     ELSE
-      len := Files.Size(f);
+      len := Files.Length(f);
       IF (len = -1) OR (len >= maxSrcSize) THEN
         Mark("file too big")
       ELSE
