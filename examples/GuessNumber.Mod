@@ -5,6 +5,15 @@ MODULE GuessNumber;
     number, left, right, old: INTEGER;
     choice: CHAR;
 
+PROCEDURE CharLn(VAR ch: CHAR);
+VAR discard: CHAR;
+BEGIN
+  In.Char(ch);
+  REPEAT
+    In.Char(discard)
+  UNTIL In.Done & (discard = 0AX);
+END CharLn;
+
 BEGIN
   Out.String("What's your name? ");
   In.String(name);
@@ -15,10 +24,10 @@ BEGIN
   right := 50;
   number := 27;
   REPEAT
-    Out.String("Is "); Out.Int(number, 3);
     REPEAT
+      Out.String("Is "); Out.Int(number, 3);
       Out.String(" the correct number? [(h)igher (l)ower (c)orrect] ");
-      In.Char(choice)
+      CharLn(choice)
     UNTIL In.Done & ((choice = "h") OR (choice = "l") OR (choice = "c"));
     IF choice = "h" THEN left := number + 1
     ELSIF choice = "l" THEN right := number - 1

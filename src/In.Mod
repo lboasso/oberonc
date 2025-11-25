@@ -12,9 +12,8 @@
   An unsuccessful input operation sets Done to FALSE; it remains FALSE until
   the next successful input operation.
 
-  Each procedure reads an entire line of input and fills its parameter with
-  input data when successful. Any remaining input in the input line is
-  discarded.
+  Each procedure reads the input stream and fills its parameter with
+  input data when successful. String reads an entire line of input.
 *)
 DEFINITION In;
   VAR Done: BOOLEAN;

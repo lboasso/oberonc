@@ -19,19 +19,18 @@ public final class In {
     scanner = new Scanner(System.in, "UTF-8");
   }
 
-  private static void nextLine() {
-    try {
-      scanner.nextLine();
-    } catch(Exception e) {
-      // ignore
-    }
-  }
 
   static public void Char(char[] ch) {
-    char[] str = new char[2];
-    String(str);
-    if (Done) {
-      ch[0] = str[0];
+    Done = true;
+    try {
+      int c = System.in.read();
+      if (c == -1) {
+        Done = false;
+      } else {
+        ch[0] = (char) (c & 0xFF);
+      }
+    } catch(Exception e) {
+      Done = false;
     }
   }
 
@@ -64,7 +63,6 @@ public final class In {
     } catch(Exception e) {
       Done = false;
     }
-    nextLine();
   }
 
   static public void Int(int[] i) {
@@ -74,6 +72,5 @@ public final class In {
     } catch(Exception e) {
       Done = false;
     }
-    nextLine();
   }
 }
