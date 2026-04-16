@@ -42,4 +42,8 @@ public final class Os {
   public static int CurrentTime() {
     return (int) ((System.currentTimeMillis() - date2010x01x01xUTC) / 1000);
   }
+
+  public static void Exit(int status) {
+    System.exit(status);
+  }
 }

@@ -9,4 +9,8 @@ DEFINITION Os;
 
   (* Get time in seconds since 2010-01-01-UTC *)
   PROCEDURE CurrentTime(): INTEGER;
+
+  (* Terminate the current program. The input "status" is the exit code
+    returned to the OS. *)
+  PROCEDURE Exit(status: INTEGER);
 END Os.

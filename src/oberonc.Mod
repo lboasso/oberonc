@@ -5,7 +5,7 @@
 *)
 
 MODULE oberonc;
-IMPORT OJS, OJP, Out, Strings;
+IMPORT OJS, OJP, Out, Os, Strings;
 
   PROCEDURE Help;
   BEGIN
@@ -21,10 +21,11 @@ IMPORT OJS, OJP, Out, Strings;
   END Help;
 
   PROCEDURE Main;
-    VAR i, len, n: INTEGER;
+    VAR i, len, n, ret: INTEGER;
       folder, arg: ARRAY OJS.maxPath OF CHAR;
       newSym: BOOLEAN;
   BEGIN
+    ret := 0;
     n := ARGNUM();
     IF n < 2 THEN
       Help
@@ -39,8 +40,12 @@ IMPORT OJS, OJP, Out, Strings;
         ELSE
           newSym := FALSE
         END ;
-        OJP.Compile(arg, newSym, folder)
+        OJP.Compile(arg, newSym, folder);
+        IF OJS.errcnt > 0 THEN
+          ret := 1
+        END
       END
-    END
+    END ;
+    Os.Exit(ret)
   END Main;
 END oberonc.

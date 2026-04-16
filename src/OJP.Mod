@@ -1343,7 +1343,9 @@ MODULE OJP; (*Oberon compiler for JVM in Oberon-07*)
       parblksize := ProcedureType(type, parblksize);  (*formal parameter list*)
       IF procid = "Main" THEN
         IF type.nofpar # 0 THEN
-          OJS.Mark("Main cannot have formal parameters");
+          OJS.Mark("Main cannot have formal parameters")
+        ELSIF type.base # OJB.noType THEN
+          OJS.Mark("Main cannot have a return type")
         ELSE
           hasMain := TRUE
         END
