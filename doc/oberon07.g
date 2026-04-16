@@ -62,7 +62,7 @@ procedureBody : declarationSequence ('BEGIN' statementSequence)?
                ('RETURN 'expression)? 'END';
 declarationSequence : ('CONST' (constDeclaration ';')*)?
                       ('TYPE' (typeDeclaration ';')*)?
-                      ('VAR' (variableDeclaration)* ';')?
+                      ('VAR' (variableDeclaration ';')*)?
                       (procedureDeclaration ';')*;
 formalParameters : '(' (fpsection (';' fpsection)*)? ')' (':' qualident)?;
 fpsection : ('VAR')? IDENT (',' IDENT)* ':' formalType;
